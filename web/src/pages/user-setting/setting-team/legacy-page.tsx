@@ -68,7 +68,7 @@ const UserSettingTeam = () => {
                 value={searchUser}
                 onChange={(e) => setSearchUser(e.target.value)}
               />
-              <Button onClick={showAddingTenantModal}>
+              <Button data-creation-action onClick={showAddingTenantModal}>
                 <UserPlus className=" h-4 w-4" />
                 {t('setting.invite')}
               </Button>

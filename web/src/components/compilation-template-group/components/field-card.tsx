@@ -48,7 +48,7 @@ export function FieldCard({
         <div className="flex items-start justify-between gap-2">
           <div className="space-y-2 space-x-2 flex-1 min-w-0">
             {title && (
-              <span className="line-clamp-1 text-sm font-medium text-text-primary">
+              <span className="line-clamp-2 text-sm font-medium text-text-primary">
                 {title}
               </span>
             )}
@@ -76,7 +76,7 @@ export function FieldCard({
         </div>
 
         {description && (
-          <p className="text-sm text-text-secondary line-clamp-3">
+          <p className="text-sm text-text-secondary line-clamp-5">
             {description}
           </p>
         )}

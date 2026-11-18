@@ -15,14 +15,17 @@
  */
 
 import { ICompilationTemplateSection } from '@/interfaces/database/compilation-template';
+import { useCallback, useEffect, useMemo } from 'react';
+import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+
+import { formatBuiltinFieldText } from '../builtin-field-label';
 import {
   createEmptyField,
   getAvailableTypeOptions,
   getFieldKeyOrder,
   getRequiredFieldKeys,
 } from '../utils';
-import { useCallback, useEffect, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
 
 type UseAddFieldFormOptions = {
   open: boolean;
@@ -37,6 +40,7 @@ export const useAddFieldForm = ({
   existingFields,
   initialField,
 }: UseAddFieldFormOptions) => {
+  const { i18n } = useTranslation();
   const form = useForm<Record<string, string>>({
     defaultValues: {},
   });
@@ -62,8 +66,12 @@ export const useAddFieldForm = ({
         builtinSection,
         existingFields,
         initialField?.type,
-      ),
-    [builtinSection, existingFields, initialField],
+      ).map((option) => ({
+        ...option,
+        label:
+          formatBuiltinFieldText(option.label, i18n.language) ?? option.label,
+      })),
+    [builtinSection, existingFields, i18n.language, initialField],
   );
 
   const buildField = useCallback(

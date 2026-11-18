@@ -203,7 +203,7 @@ func TestRunAgent_ToolHistoryPersists(t *testing.T) {
 
 			canvasID, sessionID := "canvas-tool-history", "session-tool-history"
 			params := map[string]any{
-				"llm_id": "fixture-model", "driver": "OpenAI-API-Compatible",
+				"llm_id": "fixture-model", "driver": "VLLM",
 				"api_key": "synthetic-key", "base_url": llm.URL,
 				"prompts":    []any{map[string]any{"role": "user", "content": "{sys.query}"}},
 				"cite":       false,
@@ -238,7 +238,7 @@ func TestRunAgent_ToolHistoryPersists(t *testing.T) {
 			makeCanvasWithDSL(t, canvasID, "user-1", "tenant-1", "version-tool-history", dsl)
 			modelExtra, _ := json.Marshal(map[string]string{"base_url": llm.URL})
 			for _, row := range []any{
-				&entity.TenantModelProvider{ID: "provider-history", UserID: "user-1", TenantID: "tenant-1", ProviderName: "OpenAI-API-Compatible"},
+				&entity.TenantModelProvider{ID: "provider-history", UserID: "user-1", TenantID: "tenant-1", ProviderName: "VLLM"},
 				&entity.TenantModelInstance{ID: "instance-history", ProviderID: "provider-history", InstanceName: "synthetic", APIKey: "synthetic-key", Status: "active", Extra: string(modelExtra)},
 				&entity.TenantModel{ID: "fixture-model", ModelName: "fixture-model", ProviderID: "provider-history", InstanceID: "instance-history", ModelType: int(entity.ModelTypeChat), Status: "active", Extra: "{}"},
 			} {

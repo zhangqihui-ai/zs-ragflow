@@ -30,6 +30,21 @@ type StatsHandler struct {
 	statsService *service.StatsService
 }
 
+func (h *StatsHandler) GetDashboard(c *gin.Context) {
+	period := c.DefaultQuery("period", "7d")
+	if period != "24h" && period != "7d" && period != "30d" {
+		common.RespondError(c, common.CodeBadRequest, "period must be 24h, 7d or 30d")
+		return
+	}
+	data, err := h.statsService.GetDashboard(c.Request.Context(), period)
+	if err != nil {
+		common.Error("Failed to load dashboard statistics", err)
+		common.RespondError(c, common.CodeExceptionError, "Unable to load dashboard statistics")
+		return
+	}
+	common.RespondSuccess(c, data, "success")
+}
+
 // NewStatsHandler create stats handler
 func NewStatsHandler(statsService *service.StatsService) *StatsHandler {
 	return &StatsHandler{

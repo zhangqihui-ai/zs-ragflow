@@ -84,6 +84,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"time"
 	"unicode"
 	"unicode/utf8"
 
@@ -94,6 +95,7 @@ import (
 	"ragflow/internal/common"
 	"ragflow/internal/ingestion/chunkcache"
 	"ragflow/internal/ingestion/component/globals"
+	"ragflow/internal/ingestion/component/progress"
 	"ragflow/internal/ingestion/component/schema"
 	"ragflow/internal/tokenizer"
 )
@@ -373,6 +375,7 @@ func (c *TokenizerComponent) Outputs() map[string]string {
 //     continue`), but the chunk still carries tokenized fields if
 //     `full_text` is in `search_method`.
 func (c *TokenizerComponent) Invoke(ctx context.Context, db *gorm.DB, inputs map[string]any) (map[string]any, error) {
+	startedAt := time.Now()
 	// Run-level metadata lives in the workflow-wide CanvasState.Globals
 	// bag (seeded at pipeline start, published by the File component),
 	// not in the upstream output map — see GlobalOrInput.
@@ -393,6 +396,7 @@ func (c *TokenizerComponent) Invoke(ctx context.Context, db *gorm.DB, inputs map
 		return nil, err
 	}
 	chunks := chunksFromTokenizerUpstream(upstream)
+	runtime.ReportProgressMessage(ctx, "Indexer", fmt.Sprintf("Chunking output received: %d chunks", len(chunks)))
 	common.Debug("tokenizer stage",
 		zap.String("component", "Tokenizer"),
 		zap.Int("input_chunks", len(chunks)),
@@ -414,9 +418,11 @@ func (c *TokenizerComponent) Invoke(ctx context.Context, db *gorm.DB, inputs map
 	language := globals.GlobalOrInput(ctx, inputs, "lang", "English")
 
 	if slices.Contains(c.param.SearchMethod, "full_text") {
+		runtime.ReportProgressMessage(ctx, "Indexer", fmt.Sprintf("Full-text tokenization started: chunks=%d", len(chunks)))
 		if err := tokenizeChunks(chunks, titleStem, language); err != nil {
 			return nil, err
 		}
+		runtime.ReportProgressMessage(ctx, "Indexer", "Full-text tokenization finished")
 	}
 
 	out := map[string]any{
@@ -437,6 +443,7 @@ func (c *TokenizerComponent) Invoke(ctx context.Context, db *gorm.DB, inputs map
 		}
 		out["embedding_token_consumption"] = tokenCount
 		out["chunks"] = schema.ChunkDocsToMaps(chunks)
+		runtime.ReportProgressMessage(ctx, "Indexer", fmt.Sprintf("Embedding finished: input_chunks=%d, tokens=%d", len(chunks), tokenCount))
 	}
 	if err := validateTokenizerOutputs(chunks, c.param.SearchMethod, c.param.Fields, kbID); err != nil {
 		return nil, err
@@ -446,6 +453,7 @@ func (c *TokenizerComponent) Invoke(ctx context.Context, db *gorm.DB, inputs map
 		zap.String("component", "Tokenizer"),
 		zap.Int("output_chunks", len(chunks)),
 	)
+	runtime.ReportProgressMessage(ctx, "Indexer", fmt.Sprintf("Index preparation finished: chunks=%d, elapsed=%s", len(chunks), time.Since(startedAt).Round(time.Millisecond)))
 	return out, nil
 }
 
@@ -567,16 +575,19 @@ func (c *TokenizerComponent) embedChunks(ctx context.Context, tenantID, kbID, na
 	// embed some chunks and drop others, and the dropped ones must still be
 	// reported. Each reports how many chunks it covers, not the batch size.
 	if fieldsResolvedNoText > 0 {
+		runtime.ReportProgressMessage(ctx, "Indexer", fmt.Sprintf("[WARN] Embedding skipped %d chunks because configured fields produced no text", fieldsResolvedNoText))
 		common.Warn("Tokenizer: configured fields produced no text for some chunks; they were skipped",
 			zap.Strings("fields", c.param.Fields),
 			zap.Int("chunks", fieldsResolvedNoText),
 			zap.Int("total_chunks", len(chunks)))
 	}
 	if emptyAfterTrim > 0 {
+		runtime.ReportProgressMessage(ctx, "Indexer", fmt.Sprintf("[WARN] Embedding retained original text for %d chunks because trimming returned empty text", emptyAfterTrim))
 		common.Warn("Tokenizer: embedder returned no text after trimming; embedded the untrimmed text instead",
 			zap.Int("chunks", emptyAfterTrim),
 			zap.Int("total_chunks", len(chunks)))
 	}
+	runtime.ReportProgressMessage(ctx, "Indexer", fmt.Sprintf("Embedding prepared: input_chunks=%d, cached=%d, pending=%d", len(chunks), cacheHits, len(texts)))
 	if len(texts) == 0 && cacheHits == 0 {
 		// Nothing to embed and nothing to serve from cache: return before the
 		// title encode, exactly like Python's `if not texts: return` — an
@@ -601,6 +612,7 @@ func (c *TokenizerComponent) embedChunks(ctx context.Context, tenantID, kbID, na
 	if trimmedName == "" {
 		common.Warn("Tokenizer: empty name provided from upstream, embedding will skip title weighting")
 	} else {
+		runtime.ReportProgressMessage(ctx, "Indexer", "Embedding document title started")
 		// Encode the raw name (no TrimSpace) to mirror Python
 		// tokenizer.py:95 which passes name verbatim to embedding. The
 		// empty-name guard above still uses TrimSpace, matching Python's
@@ -615,6 +627,7 @@ func (c *TokenizerComponent) embedChunks(ctx context.Context, tenantID, kbID, na
 		titleVec = titleResults[0].Vector
 		tokenCount = titleResults[0].TokenCount
 		hasTitleVec = true
+		runtime.ReportProgressMessage(ctx, "Indexer", "Embedding document title finished")
 	}
 
 	contentResults := make([]EmbeddingResult, 0, len(texts))
@@ -623,6 +636,8 @@ func (c *TokenizerComponent) embedChunks(ctx context.Context, tenantID, kbID, na
 		return nil, 0, fmt.Errorf("tokenizer: embedder reported non-positive batch size %d", batchSize)
 	}
 	embedTotal := cacheHits + len(texts)
+	details := progress.NewReporter(ctx, "Indexer", "Chunks embedded (including cache hits)")
+	details.Report(cacheHits, embedTotal)
 	for start := 0; start < len(texts); start += batchSize {
 		end := start + batchSize
 		if end > len(texts) {
@@ -640,6 +655,7 @@ func (c *TokenizerComponent) embedChunks(ctx context.Context, tenantID, kbID, na
 		}
 		contentResults = append(contentResults, batchResults...)
 		runtime.ReportComponentFraction(ctx, float64(cacheHits+end)/float64(embedTotal))
+		details.Report(cacheHits+end, embedTotal)
 	}
 	if len(texts) == 0 && embedTotal > 0 {
 		// With no cache misses the batch loop never runs, so the phase would

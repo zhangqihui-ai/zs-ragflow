@@ -51,6 +51,7 @@ func readProviderConfig(t *testing.T, fileName string) []byte {
 	for _, candidate := range []string{
 		filepath.Join("..", "..", "..", "conf", "models", fileName),
 		filepath.Join("conf", "models", fileName),
+		filepath.Join("testdata", "providers", fileName),
 	} {
 		data, err := os.ReadFile(candidate)
 		if err == nil {

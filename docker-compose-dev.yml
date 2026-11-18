@@ -1,0 +1,230 @@
+# Prepare once: bash docker/dev/prepare.sh
+# Then: docker compose -f docker-compose-dev.yml up --build
+name: ragflow-dev
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/dev/Dockerfile
+      args:
+        RAGFLOW_BUILD_IMAGE: ${RAGFLOW_BUILD_IMAGE:-infiniflow/github_action_runner:latest}
+    init: true
+    working_dir: /ragflow
+    environment:
+      TZ: Asia/Shanghai
+      DB_TYPE: mysql
+      DOC_ENGINE: elasticsearch
+      ADMIN_DEFAULT_PASSWORD: admin
+      ENABLE_REGISTER: "1"
+      REGISTER_ENABLED: "1"
+      GOPROXY: ${GOPROXY:-https://goproxy.cn,https://proxy.golang.org,direct}
+    ports:
+      - "${DEV_API_PORT:-9380}:9380"
+      - "${DEV_ADMIN_PORT:-9381}:9381"
+    volumes:
+      - .:/ragflow
+      - ./deps:/ragflow/deps:ro
+      - type: bind
+        source: ./internal/rag/res/deepdoc
+        target: /ragflow/internal/rag/res/deepdoc
+        read_only: true
+        bind:
+          create_host_path: false
+      - go_modules:/root/.cache/gomod
+      - go_build:/root/.cache/gobuild
+      - project_cache:/ragflow/.cache
+      - native_cache:/root/ragflow-native-libs
+      - type: bind
+        source: ${RAGFLOW_NATIVE_LIBS_DIR:-${HOME}/ragflow-native-libs}
+        target: /opt/ragflow-native-libs
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./deps/infinity-resource
+        target: /usr/share/infinity/resource
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./deps/NotoSansCJKsc-VF.ttf
+        target: /usr/local/share/fonts/truetype/noto/NotoSansCJKsc-VF.ttf
+        read_only: true
+        bind:
+          create_host_path: false
+      - cpp_build:/ragflow/internal/binding/cpp/cmake-build-release
+      - backend_bin:/ragflow/bin
+      - backend_logs:/ragflow/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      es01:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      kvrocks:
+        condition: service_healthy
+      nats:
+        condition: service_started
+    stop_grace_period: 45s
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  frontend:
+    image: node:22-bookworm-slim
+    init: true
+    working_dir: /ragflow/web
+    environment:
+      DEV_API_TARGET: http://backend:9380/
+      DEV_ADMIN_TARGET: http://backend:9381/
+      DEV_USE_POLLING: "true"
+      NODE_OPTIONS: --max-old-space-size=4096
+    command:
+      - sh
+      - -ec
+      - npm ci --no-audit --no-fund && exec npm run dev -- --host 0.0.0.0 --port 9222 --strictPort
+    ports:
+      - "${DEV_WEB_PORT:-9222}:9222"
+    volumes:
+      - .:/ragflow
+      - node_modules:/ragflow/web/node_modules
+      - npm_cache:/root/.npm
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:9222/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10m
+    depends_on:
+      backend:
+        condition: service_started
+
+  frontend-new:
+    image: node:22-bookworm-slim
+    init: true
+    working_dir: /ragflow/zs-rag-web
+    environment:
+      DEV_API_TARGET: http://backend:9380/
+      DEV_ADMIN_TARGET: http://backend:9381/
+      DEV_USE_POLLING: "true"
+      VITE_LEGACY_WEB_PORT: "${DEV_WEB_PORT:-9222}"
+      VITE_LEGACY_WEB_ORIGIN: "${VITE_LEGACY_WEB_ORIGIN:-}"
+      NODE_OPTIONS: --max-old-space-size=4096
+    command:
+      - sh
+      - -ec
+      - npm ci --no-audit --no-fund && exec npm run dev -- --host 0.0.0.0 --port 9223 --strictPort
+    ports:
+      - "${DEV_NEW_WEB_PORT:-9223}:9223"
+    volumes:
+      - ./zs-rag-web:/ragflow/zs-rag-web
+      - ./web:/ragflow/web:ro
+      - node_modules:/ragflow/web/node_modules:ro
+      - ./docs/references/http_api_reference.md:/ragflow/docs/references/http_api_reference.md:ro
+      - new_node_modules:/ragflow/zs-rag-web/node_modules
+      - npm_cache:/root/.npm
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:9223/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10m
+    depends_on:
+      backend:
+        condition: service_started
+      frontend:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.0.40
+    environment:
+      MYSQL_ROOT_PASSWORD: infini_rag_flow
+      MYSQL_DATABASE: rag_flow
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --max-allowed-packet=1073741824
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [CMD-SHELL, "mysql -h127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD -e 'SELECT 1'"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+
+  es01:
+    image: elasticsearch:8.11.3
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "true"
+      xpack.security.http.ssl.enabled: "false"
+      ELASTIC_PASSWORD: infini_rag_flow
+      ES_JAVA_OPTS: -Xms1g -Xmx1g
+      cluster.routing.allocation.disk.watermark.low: 5gb
+      cluster.routing.allocation.disk.watermark.high: 3gb
+      cluster.routing.allocation.disk.watermark.flood_stage: 2gb
+    mem_limit: 3g
+    tmpfs:
+      - /tmp:mode=1777,size=512m
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: [CMD-SHELL, "curl -fsS -u elastic:$$ELASTIC_PASSWORD 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s'"]
+      interval: 10s
+      timeout: 10s
+      retries: 60
+
+  minio:
+    image: pgsty/silo:RELEASE.2026-08-06T00-00-00Z
+    command: [server, --console-address, ":9001", /data]
+    environment:
+      MINIO_ROOT_USER: rag_flow
+      MINIO_ROOT_PASSWORD: infini_rag_flow
+    ports:
+      - "${DEV_MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: [CMD, curl, -fsS, http://localhost:9000/minio/health/live]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+
+  kvrocks:
+    image: apache/kvrocks:2.16.0
+    user: "0:0"
+    entrypoint: [/bin/sh, /etc/kvrocks/entrypoint.sh]
+    environment:
+      REDIS_PASSWORD: infini_rag_flow
+    volumes:
+      - kvrocks_data:/var/lib/kvrocks
+      - ./docker/kvrocks-entrypoint.sh:/etc/kvrocks/entrypoint.sh:ro
+    healthcheck:
+      test: [CMD-SHELL, "redis-cli -a $$REDIS_PASSWORD ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+
+  nats:
+    image: nats:2.14.2
+    command: [-js, -sd, /data, --http_port, "8222"]
+    volumes:
+      - nats_data:/data
+volumes:
+  go_modules:
+  go_build:
+  project_cache:
+  native_cache:
+  cpp_build:
+  backend_bin:
+  backend_logs:
+  node_modules:
+  new_node_modules:
+  npm_cache:
+  mysql_data:
+  es_data:
+  minio_data:
+  kvrocks_data:
+  nats_data:

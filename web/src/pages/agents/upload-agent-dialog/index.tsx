@@ -27,6 +27,7 @@ export function UploadAgentDialog({
         <UploadAgentForm hideModal={hideModal} onOk={onOk}></UploadAgentForm>
         <DialogFooter>
           <ButtonLoading
+            data-creation-action
             data-testid="agent-import-save"
             type="submit"
             form={TagRenameId}

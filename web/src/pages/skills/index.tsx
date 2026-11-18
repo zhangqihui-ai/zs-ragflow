@@ -628,7 +628,10 @@ const SkillsPage: React.FC = () => {
                     { value: 'list', label: <List className="size-4" /> },
                   ]}
                 />
-                <Button onClick={() => setCreateSpaceModalOpen(true)}>
+                <Button
+                  data-creation-action
+                  onClick={() => setCreateSpaceModalOpen(true)}
+                >
                   <Plus className="size-[1em]" />
                   {t('skills.createSpace') || 'Create Skill Space'}
                 </Button>
@@ -997,7 +1000,10 @@ const SkillsPage: React.FC = () => {
                 <TooltipContent>{t('common.refresh')}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <Button onClick={() => setUploadModalOpen(true)}>
+            <Button
+              data-creation-action
+              onClick={() => setUploadModalOpen(true)}
+            >
               <Plus className="mr-2" />
               {t('skills.addSkill') || 'Add Skill'}
             </Button>
@@ -1028,6 +1034,7 @@ const SkillsPage: React.FC = () => {
               <div className="text-center">
                 <p className="mb-2">{t('skills.noSkills')}</p>
                 <button
+                  data-creation-action
                   className="text-accent-primary hover:underline"
                   onClick={() => setUploadModalOpen(true)}
                 >

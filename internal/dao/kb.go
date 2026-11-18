@@ -274,7 +274,7 @@ func (dao *KnowledgebaseDAO) ListByQuery(ctx context.Context, query *gorm.DB, ow
 		knowledgebase.vector_similarity_weight, knowledgebase.parser_id, knowledgebase.parser_config,
 		knowledgebase.pagerank, knowledgebase.embd_id,
 		knowledgebase.tenant_embd_id, knowledgebase.pipeline_id, knowledgebase.pipeline_version_id,
-		user.nickname, user.avatar as tenant_avatar, knowledgebase.update_time`).
+		user.nickname, user.avatar as tenant_avatar, knowledgebase.create_time, knowledgebase.update_time`).
 		Joins("LEFT JOIN user ON knowledgebase.tenant_id = user.id").
 		Where("knowledgebase.status = ?", string(entity.StatusValid))
 

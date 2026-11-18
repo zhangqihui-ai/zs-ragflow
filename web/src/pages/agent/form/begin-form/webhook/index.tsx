@@ -105,6 +105,7 @@ export function WebHook() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button
+            data-creation-action
             type="button"
             size="sm"
             loading={creatingCredential}

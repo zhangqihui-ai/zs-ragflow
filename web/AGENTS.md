@@ -1,6 +1,15 @@
 # AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with the RAGFlow frontend (`web/`).
+This file guides coding agents and development tools working with the RAGFlow frontend (`web/`). Read the repository-root `AGENTS.md` first.
+
+## 最高优先级：开发环境与视觉规范
+
+根目录 `AGENTS.md` 中的用户硬性要求同样适用于本目录及其全部子目录：
+
+- **使用 `docker-compose-dev.yml` 开发环境，必须保留源码挂载和热加载。** 前端使用容器内的 Vite HMR，后端保留自动编译和重启，不得改用生产部署或本机单独启动服务作为二次开发方式。启动命令为 `docker compose -f docker-compose-dev.yml up --build -d`；准备步骤见 `docker/dev/README.md`。
+- **蓝色 + 白色是 UI 的固定主基调。** 页面、按钮、菜单、选中态、字体和背景必须统一，维持简约企业风格，不得替换为其他主色调。复用 `tailwind.css` 中的语义颜色、共享字体和样式；主操作使用现有蓝色令牌（如 `nav-active-text`），创建按钮复用 `src/components/create-button.tsx`，保持颜色、圆角、尺寸和间距一致。辅助状态色及图表分类色不得改变整体蓝白视觉。
+
+以上两条是本项目视觉和开发方式的最高优先级约束，适用于后续所有需求和所有开发工具，不因旧页面或旧示例而放宽。
 
 ## Project Overview
 
@@ -13,6 +22,8 @@ RAGFlow frontend is a React/TypeScript application built with Vite:
 - **i18n**: react-i18next
 
 ## Common Commands
+
+Run frontend tooling inside the existing development container, e.g. `docker compose -f docker-compose-dev.yml exec -T frontend npm run lint` from the repository root. The frontend service already runs Vite with HMR; do not launch another `npm run dev` process. The commands below describe the tools available inside that container.
 
 ```bash
 npm install

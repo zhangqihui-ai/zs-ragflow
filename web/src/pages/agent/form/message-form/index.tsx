@@ -105,6 +105,7 @@ function MessageForm({ node }: INextOperatorForm) {
             ))}
 
             <BlockButton
+              data-creation-action
               type="button"
               onClick={() => append({ value: '' })} // "" will cause the inability to add, refer to: https://github.com/orgs/react-hook-form/discussions/8485#discussioncomment-2961861
             >

@@ -151,6 +151,7 @@ function AdminRoles() {
             <CardTitle>{t('admin.roles')}</CardTitle>
 
             <Button
+              data-creation-action
               className="h-10 px-4"
               onClick={() => setAddRoleModalOpen(true)}
             >
@@ -307,6 +308,7 @@ function AdminRoles() {
             </Button>
 
             <Button
+              data-creation-action
               type="submit"
               form={createRoleForm.id}
               className="px-4 h-10"

@@ -64,6 +64,7 @@ export function DynamicGroupVariable({
             </span>
           )}
           <Button
+            data-creation-action
             variant={'ghost'}
             type="button"
             onClick={() => append({ value: '' })}

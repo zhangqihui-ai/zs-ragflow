@@ -131,6 +131,7 @@ const EditTag = React.forwardRef<HTMLDivElement, EditTagsProps>(
 
           {!inputVisible && !disabled && (
             <Button
+              data-creation-action
               variant="outline"
               size="icon"
               type="button"

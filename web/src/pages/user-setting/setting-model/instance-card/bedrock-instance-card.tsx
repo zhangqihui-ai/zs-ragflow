@@ -917,7 +917,11 @@ export const BedrockInstanceCard = forwardRef<
                   <Trash2 className="size-4" />
                 </Button>
               </ConfirmDeleteDialog>
-              <InstanceSaveButton onSave={handleSave} saving={saving} />
+              <InstanceSaveButton
+                isCreate={isDraft}
+                onSave={handleSave}
+                saving={saving}
+              />
             </div>
           </div>
 

@@ -50,7 +50,7 @@ export const supportedLanguages = supportedLanguageCodes.map((code) => {
 });
 
 export const DEFAULT_LANGUAGE_CODE =
-  import.meta.env.VITE_DEFAULT_LANGUAGE_CODE || LanguageAbbreviation.En;
+  import.meta.env.VITE_DEFAULT_LANGUAGE_CODE || LanguageAbbreviation.Zh;
 
 // Enterprise customization overlays: the enterprise repository carries real
 // implementations of these same-path files (`web/src/ee/locales/*-private.ts`);

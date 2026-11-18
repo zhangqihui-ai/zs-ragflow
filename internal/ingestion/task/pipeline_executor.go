@@ -25,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	"ragflow/internal/agent/runtime"
 	"ragflow/internal/common"
 	"ragflow/internal/dao"
 	"ragflow/internal/engine"
@@ -254,6 +255,15 @@ func (s *PipelineExecutor) Execute(ctx context.Context) (*PipelineResult, error)
 	// image upload, no index insert, no pipeline log); see TaskContext.IsDebug.
 	if s.taskCtx.IsDebug() {
 		return s.collectDebugOutput(ctx, pipelineOutput, start)
+	}
+
+	if sink, ok := s.progressSink.(interface {
+		OnComponentMessage(context.Context, string, string, string, string)
+	}); ok && s.taskCtx.IngestionTask != nil {
+		messageCtx := ctx
+		ctx = runtime.WithProgressMessageCallback(ctx, func(component, message string) {
+			sink.OnComponentMessage(messageCtx, s.taskCtx.IngestionTask.ID, s.taskCtx.Doc.ID, component, message)
+		})
 	}
 
 	result, err := s.processOutput(ctx, pipelineOutput, start)

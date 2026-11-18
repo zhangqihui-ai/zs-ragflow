@@ -93,6 +93,7 @@ export function DynamicPageRange({ prefix }: CommonProps) {
       })}
 
       <Button
+        data-creation-action
         onClick={handleAppend}
         block
         className="mt-4"

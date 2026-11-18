@@ -4,7 +4,7 @@ import { EmptyAppCard } from '@/components/empty/empty';
 import ListFilterBar from '@/components/list-filter-bar';
 import { PrivilegeManagementDialog } from '@/ee/components/privilege-management/privilege-management-dialog';
 import { RenameDialog } from '@/components/rename-dialog';
-import { Button } from '@/components/ui/button';
+import { CreateButton } from '@/components/create-button';
 import { RAGFlowPagination } from '@/components/ui/ragflow-pagination';
 import { Spin } from '@/components/ui/spin';
 import { ListDeletionKey } from '@/constants/list-deletion';
@@ -12,7 +12,6 @@ import { useGoToPreviousPageOnEmpty } from '@/hooks/logic-hooks';
 import { useFetchChatList } from '@/hooks/use-chat-request';
 import { buildOwnersFilter } from '@/utils/list-filter-util';
 import { pick } from 'lodash';
-import { Plus } from 'lucide-react';
 import { useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
@@ -104,6 +103,7 @@ export default function ChatList() {
         onOk: onCreateChatOk,
         initialName: '',
         loading: createChatLoading,
+        isCreate: true,
         title: t('chat.createChat'),
       };
     }
@@ -145,10 +145,12 @@ export default function ChatList() {
               value={filterValue}
               onChange={handleFilterSubmit}
             >
-              <Button data-testid="create-chat" onClick={handleShowCreateModal}>
-                <Plus className="size-[1em]" />
+              <CreateButton
+                data-testid="create-chat"
+                onClick={handleShowCreateModal}
+              >
                 {t('chat.createChat')}
-              </Button>
+              </CreateButton>
             </ListFilterBar>
           </header>
 

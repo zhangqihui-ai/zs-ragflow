@@ -65,7 +65,7 @@ func TestAgentToolHistoryNestedAndConcurrent(t *testing.T) {
 	}))
 	defer server.Close()
 	param := func(name string) AgentParam {
-		return AgentParam{ModelID: name + "-model", Driver: "OpenAI-API-Compatible", APIKey: "synthetic", BaseURL: server.URL, UserPrompt: "task", MaxRounds: 2}
+		return AgentParam{ModelID: name + "-model", Driver: "VLLM", APIKey: "synthetic", BaseURL: server.URL, UserPrompt: "task", MaxRounds: 2}
 	}
 	leaf := param("leaf")
 	child := param("child")

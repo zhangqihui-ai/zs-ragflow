@@ -48,6 +48,7 @@ export default function ChunkResultBar({
       </div>
       {!isReadonly && (
         <Button
+          data-creation-action
           onClick={() => createChunk('')}
           variant={'secondary'}
           className="bg-bg-card text-muted-foreground hover:bg-card"

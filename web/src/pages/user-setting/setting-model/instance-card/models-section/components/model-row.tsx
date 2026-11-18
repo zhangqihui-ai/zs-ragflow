@@ -41,6 +41,7 @@ export function ModelRow({
   // from the dialog's confirm action instead.
   const toggleButton = (
     <button
+      data-creation-action={!isAdded}
       type="button"
       className="size-6 flex items-center justify-center rounded-md transition-colors text-text-secondary"
       onClick={isAdded ? undefined : onAdd}

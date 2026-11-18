@@ -56,7 +56,9 @@ function VariableAggregatorForm({ node }: INextOperatorForm) {
             ></DynamicGroupVariable>
           ))}
         </section>
-        <BlockButton onClick={appendItem}>{t('common.add')}</BlockButton>
+        <BlockButton data-creation-action onClick={appendItem}>
+          {t('common.add')}
+        </BlockButton>
         <Separator />
 
         <Output list={outputList}></Output>

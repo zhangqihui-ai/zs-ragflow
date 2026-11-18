@@ -103,6 +103,7 @@ export function DynamicVariableForm({ name = 'arguments', isOutputs }: IProps) {
         );
       })}
       <BlockButton
+        data-creation-action
         type="button"
         onClick={() => append({ name: '', type: undefined })}
       >

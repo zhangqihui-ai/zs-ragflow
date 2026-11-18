@@ -42,7 +42,12 @@ export function ImportMcpDialog({
         </DialogHeader>
         <ImportMcpForm hideModal={hideModal} onOk={onOk}></ImportMcpForm>
         <DialogFooter>
-          <ButtonLoading type="submit" form={TagRenameId} loading={loading}>
+          <ButtonLoading
+            data-creation-action
+            type="submit"
+            form={TagRenameId}
+            loading={loading}
+          >
             {t('common.save')}
           </ButtonLoading>
         </DialogFooter>

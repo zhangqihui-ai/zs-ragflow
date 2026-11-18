@@ -732,11 +732,22 @@ func (d *DatasetService) ListDatasets(ctx context.Context, id, name string, page
 	// Resolve the latest version id per canvas once for the whole page so the
 	// per-row outdated flag does not issue a GetLatest per dataset (N+1).
 	latestVersionByCanvas := latestVersionIDsByCanvas(ctx, kbs)
+	datasetIDs := make([]string, 0, len(kbs))
+	for _, kb := range kbs {
+		if kb != nil {
+			datasetIDs = append(datasetIDs, kb.ID)
+		}
+	}
+	parsingSummaries, err := dao.NewDocumentDAO().ParsingSummaries(ctx, dao.DB, datasetIDs)
+	if err != nil {
+		return nil, 0, common.CodeServerError, err
+	}
 	for _, kb := range kbs {
 		if kb == nil {
 			continue
 		}
 		item := datasetListItemToMap(latestVersionByCanvas, kb)
+		item["parsing_summary"] = parsingSummaries[kb.ID]
 		item["operator_permission"] = operatorPermissions[kb.ID]
 		// Mirror the memory list: surface the concrete model display name
 		// (modelName@instance@provider) instead of a raw tenant_model ID.

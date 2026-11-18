@@ -138,11 +138,13 @@ func attachPDFPageProgress(ctx context.Context, p parser.ParseResultProducer, wi
 	if !ok || window.Span <= 0 {
 		return
 	}
+	details := progress.NewReporter(ctx, "Parser", "PDF pages parsed")
 	pdfParser.OnPageDone = func(done, total int) {
 		if total <= 0 {
 			return
 		}
 		window.Report(ctx, float64(done)/float64(total))
+		details.Report(done, total)
 	}
 }
 

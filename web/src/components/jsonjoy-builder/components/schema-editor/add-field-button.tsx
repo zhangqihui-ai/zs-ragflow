@@ -66,6 +66,7 @@ const AddFieldButton: FC<AddFieldButtonProps & KeyInputProps> = ({
   return (
     <>
       <Button
+        data-creation-action
         type="button"
         onClick={() => setDialogOpen(true)}
         variant={variant === 'primary' ? 'default' : 'outline'}
@@ -230,7 +231,7 @@ const AddFieldButton: FC<AddFieldButtonProps & KeyInputProps> = ({
               >
                 {t.fieldAddNewCancel}
               </Button>
-              <Button type="submit" size="sm">
+              <Button data-creation-action type="submit" size="sm">
                 {t.fieldAddNewConfirm}
               </Button>
             </DialogFooter>

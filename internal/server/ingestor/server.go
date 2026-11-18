@@ -147,7 +147,7 @@ func Run(ctx context.Context, cancel context.CancelFunc, serverName string, args
 	// composition root for ingestion runs; it reads these from the explicit
 	// bindings rather than the package globals.
 	task.InitEmbedderResolver(dao.DB)
-	task.InitKnowledgeCompilerDeps(dao.DB, engine.Get())
+	task.InitKnowledgeCompilerDeps(dao.DB, engine.Get(), ingestorDeps.KV)
 
 	// Start returns immediately (it launches the owned consume/compile
 	// goroutines and joins them via Stop); a provisioning failure here must

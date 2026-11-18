@@ -35,7 +35,11 @@ export function AgentCreateMenu({
 }) {
   if (directOnClick) {
     return (
-      <Button data-testid="create-agent" onClick={directOnClick}>
+      <Button
+        data-creation-action
+        data-testid="create-agent"
+        onClick={directOnClick}
+      >
         <Plus className="size-[1em]" />
       </Button>
     );
@@ -44,7 +48,7 @@ export function AgentCreateMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger data-testid="create-agent" asChild>
-        <Button>
+        <Button data-creation-action>
           <Plus className="size-[1em]" />
         </Button>
       </DropdownMenuTrigger>
@@ -77,6 +81,7 @@ export function AgentsEmptyStateActions({
       {actions.map((action) => (
         <li key={action.key}>
           <Button
+            data-creation-action
             variant="static"
             size="auto"
             data-testid={

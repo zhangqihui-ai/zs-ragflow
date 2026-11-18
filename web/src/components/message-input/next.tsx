@@ -270,11 +270,11 @@ export function NextMessageInput({
       </FileUploadDropzone>
 
       <form
+        data-input-surface
         onSubmit={onSubmit}
         className="
           relative flex w-full flex-col gap-2.5 rounded-md
           border-0.5 border-border-default bg-bg-card p-2 outline-none
-          has-[textarea:focus]:outline-accent-primary has-[textarea:focus]:outline-1 has-[textarea:focus]:outline-offset-2
         "
       >
         {resize === 'vertical' && (
@@ -331,6 +331,7 @@ export function NextMessageInput({
             {showUploadIcon && (
               <FileUploadTrigger asChild>
                 <Button
+                  data-creation-action
                   type="button"
                   size="icon-xs"
                   variant="transparent"

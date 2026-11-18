@@ -174,7 +174,12 @@ function CardBody({ cardName }: CardBodyProps) {
         ))}
       </div>
 
-      <BlockButton type="button" onClick={handleAppendLevel} className="mt-4">
+      <BlockButton
+        data-creation-action
+        type="button"
+        onClick={handleAppendLevel}
+        className="mt-4"
+      >
         {t('flow.addRegularExpressions')}
       </BlockButton>
     </CardContent>
@@ -228,7 +233,12 @@ function RulesFieldArray({ name }: RulesFieldArrayProps) {
           </Card>
         );
       })}
-      <BlockButton type="button" onClick={handleAppendRule} className="mt-4">
+      <BlockButton
+        data-creation-action
+        type="button"
+        onClick={handleAppendRule}
+        className="mt-4"
+      >
         {t('flow.addRule', 'Add Rule')}
       </BlockButton>
     </div>

@@ -153,6 +153,7 @@ export function EditMcpDialog({
             {t('common.cancel')}
           </Button>
           <ButtonLoading
+            data-creation-action={!id}
             type="submit"
             form={FormId}
             loading={loading}

@@ -201,6 +201,7 @@ const SettingModelV2: FC = () => {
               ))}
               <div className="z-10 border-border-button py-4">
                 <button
+                  data-creation-action
                   type="button"
                   className="w-full flex items-center justify-center gap-2 px-3 py-1 rounded-md border border-dashed border-border-button text-text-secondary hover:bg-bg-input hover:text-text-primary transition-colors"
                   onClick={addDraft}

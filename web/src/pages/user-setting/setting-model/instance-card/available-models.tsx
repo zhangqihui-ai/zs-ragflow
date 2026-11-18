@@ -233,6 +233,7 @@ export const AvailableModels: FC<{
               </div>
 
               <Button
+                data-creation-action
                 size="xs"
                 className="shrink-0 px-2 opacity-0 transition-all group-hover:opacity-100 group-focus-within:opacity-100"
               >

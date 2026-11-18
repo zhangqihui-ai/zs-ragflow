@@ -108,6 +108,7 @@ export function WikiNavBar({
           </Breadcrumb>
           {!selectedTopic && (
             <Button
+              data-creation-action
               variant="secondary"
               size="icon-xs"
               onClick={handleShowCreateDialog}

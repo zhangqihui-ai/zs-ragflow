@@ -155,7 +155,11 @@ function BeginForm({ node }: INextOperatorForm) {
                 </div>
               }
               rightContent={
-                <Button variant={'ghost'} onClick={handleAddQuery}>
+                <Button
+                  data-creation-action
+                  variant={'ghost'}
+                  onClick={handleAddQuery}
+                >
                   <Plus />
                 </Button>
               }

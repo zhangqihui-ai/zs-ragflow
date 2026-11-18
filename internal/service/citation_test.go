@@ -30,6 +30,7 @@ func TestBuildAgenticReferenceRetainsWebChunkCitations(t *testing.T) {
 	for _, answer := range []string{
 		"Public facts. [ID:1]",
 		"Public facts. [Public source](https://example.com/source)",
+		"Public facts. [raw chunk citation]",
 	} {
 		t.Run(answer, func(t *testing.T) {
 			registry := agentic_rag.NewEvidenceRegistry()
@@ -37,6 +38,7 @@ func TestBuildAgenticReferenceRetainsWebChunkCitations(t *testing.T) {
 			web := agentic_rag.WebResult{Title: "Public source", URL: "https://example.com/source", Content: "Public facts."}
 			registry.StampWebResult(web)
 			registry.StampWebResult(agentic_rag.WebResult{URL: "https://example.com/uncited", Content: "Other facts."})
+			answer := strings.ReplaceAll(answer, "[raw chunk citation]", "[ID:"+registry.IDs()[1]+"]")
 			s := &ChatPipelineService{}
 			reference, marked := s.buildAgenticReference(t.Context(), "tenant", []string{"kb"}, answer, registry)
 			if !strings.Contains(marked, "[ID:0]") || strings.Contains(marked, "[ID:1]") {

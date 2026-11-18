@@ -128,6 +128,7 @@ const AddDataSourceModal = ({
             {t('setting.dataSourceTestConnection')}
           </Button>
           <DynamicForm.SavingButton
+            isCreate
             submitLoading={loading || false}
             buttonText={t('common.confirm')}
             submitFunc={handleSubmit}

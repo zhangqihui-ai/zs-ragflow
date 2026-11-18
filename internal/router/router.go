@@ -648,6 +648,7 @@ func (r *Router) Setup(engine *gin.Engine) {
 			system := v1.Group("/system")
 			{
 				system.GET("/status", r.systemHandler.GetStatus)
+				system.GET("/dashboard", r.statsHandler.GetDashboard)
 				system.GET("/stats/chat", r.statsHandler.GetChatStats)
 				system.GET("/stats/group", r.statsHandler.GetGroupStats)
 				system.GET("/stats/model", r.statsHandler.GetModelStats)

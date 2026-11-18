@@ -90,7 +90,7 @@ export function CompilationTemplateGroupEditor({
           <Button type="button" variant="outline" onClick={onCancel}>
             {cancelText}
           </Button>
-          <Button type="submit" loading={isLoading}>
+          <Button data-creation-action={!id} type="submit" loading={isLoading}>
             {t('common.save')}
           </Button>
         </footer>

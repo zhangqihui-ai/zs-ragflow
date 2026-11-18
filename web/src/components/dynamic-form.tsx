@@ -972,10 +972,12 @@ const DynamicForm = {
     props: DynamicFormProps<T> & { ref?: React.Ref<DynamicFormRef> },
   ) => React.ReactElement,
   SavingButton: ({
+    isCreate = false,
     submitLoading,
     buttonText,
     submitFunc,
   }: {
+    isCreate?: boolean;
     submitLoading?: boolean;
     buttonText?: string;
     submitFunc?: (values: FieldValues) => void;
@@ -983,6 +985,7 @@ const DynamicForm = {
     const form = useFormContext();
     return (
       <button
+        data-creation-action={isCreate}
         type="button"
         disabled={submitLoading}
         onClick={() => {

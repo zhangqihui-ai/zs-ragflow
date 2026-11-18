@@ -4,23 +4,26 @@ import {
   useRootLayoutChrome,
 } from '@/ee/layouts/root-layout-shell';
 import { Outlet } from 'react-router';
-import { Header } from './components/header';
+import { SidebarNavbar } from './components/global-navbar';
 
 export function RootLayoutContainer({ children }: React.PropsWithChildren) {
   const { containerRef, showHeader } = useRootLayoutChrome();
 
   return (
     <div
-      className="size-full min-w-0 grid grid-flow-col grid-cols-1 grid-rows-[auto_auto_1fr]"
+      className="grid size-full min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden"
       ref={containerRef}
     >
       <div>
         <RootLayoutBanner />
       </div>
 
-      {showHeader && <Header className="px-5 py-4" />}
-
-      <main className="size-full min-w-0 overflow-hidden">{children}</main>
+      <div className="flex min-h-0 min-w-0 overflow-hidden">
+        {showHeader && <SidebarNavbar />}
+        <main className="min-h-0 min-w-0 flex-1 overflow-hidden">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

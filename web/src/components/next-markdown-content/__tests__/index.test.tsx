@@ -167,6 +167,28 @@ const popoverTexts = () =>
   screen.getAllByTestId('popover').map((popover) => popover.textContent);
 
 describe('MarkdownContent citations', () => {
+  it('links a workflow document ID to a retrieved passage from that document', () => {
+    const documentId = '890405543ef84e2dbe4bf88061f804a1';
+    const unmatchedId = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    const reference = buildReference();
+    reference.chunks[1] = buildChunk(
+      Nightingale.id,
+      Nightingale.content,
+      documentId,
+    );
+    render(
+      <MarkdownContent
+        content={`来源（文档ID: ${documentId}）。文档ID：${unmatchedId}`}
+        loading={false}
+        reference={reference}
+      />,
+    );
+    expect(chipTexts()).toEqual(['[1]']);
+    expect(popoverTexts()[0]).toContain('NIGHTINGALE_CHUNK_CONTENT');
+    expect(screen.queryByText(documentId, { exact: false })).toBeNull();
+    expect(screen.getByText(unmatchedId, { exact: false })).toBeInTheDocument();
+  });
+
   it('resolves agent [ID:<chunkId>] markers by chunk id, not citation order', () => {
     render(
       <MarkdownContent

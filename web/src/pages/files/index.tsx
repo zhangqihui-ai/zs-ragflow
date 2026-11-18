@@ -138,7 +138,7 @@ export default function Files() {
         >
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button>
+              <Button data-creation-action>
                 <LucidePlus />
                 {t('knowledgeDetails.addFile')}
               </Button>

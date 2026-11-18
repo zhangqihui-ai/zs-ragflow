@@ -20,6 +20,7 @@ import { ListCheck, Loader2 } from 'lucide-react';
 import { MouseEvent, useCallback } from 'react';
 
 interface InstanceSaveButtonProps {
+  isCreate?: boolean;
   /** Persist the instance this button belongs to. */
   onSave: () => void;
   /** True while the save request is in flight. */
@@ -32,6 +33,7 @@ interface InstanceSaveButtonProps {
  * trigger, which would toggle the card open/closed.
  */
 export function InstanceSaveButton({
+  isCreate = false,
   onSave,
   saving,
 }: InstanceSaveButtonProps) {
@@ -47,6 +49,7 @@ export function InstanceSaveButton({
 
   return (
     <Button
+      data-creation-action={isCreate}
       size="sm"
       onClick={handleClick}
       disabled={saving}

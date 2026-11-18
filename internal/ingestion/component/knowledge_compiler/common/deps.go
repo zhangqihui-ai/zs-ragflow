@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -212,6 +213,12 @@ type RedisClient interface {
 	// Minimal lock surface; full API added in M8.
 }
 
+// CheckpointStore persists reusable compiler output across ingestion runs.
+type CheckpointStore interface {
+	GetObj(ctx context.Context, key string, dest any) bool
+	SetNX(ctx context.Context, key, value string, ttl time.Duration) (bool, error)
+}
+
 // Deps bundles the runtime capabilities a variant needs. All fields are
 // interfaces so tests inject stubs; production wiring lives in
 // internal/ingestion/task (see PORT_PLAN.md §4 dependency injection seam).
@@ -227,10 +234,12 @@ type Deps struct {
 	// the DocStore-backed store keys its rows ragflow_<tenant_id>/<kb_id> and
 	// fails loudly on an empty scope. Runs missing either scope (canvas debug
 	// dry-runs) take the cache-less MAP path instead of calling the store.
-	WikiMapVersions WikiMapVersionStore // optional (wiki version cache)
-	Redis           RedisClient         // optional (datasetnav)
-	TenantID        string
-	DatasetID       string
+	WikiMapVersions    WikiMapVersionStore // optional (wiki version cache)
+	GraphCheckpoints   CheckpointStore
+	GraphModelIdentity string
+	Redis              RedisClient // optional (datasetnav)
+	TenantID           string
+	DatasetID          string
 	// ModelContextLen is the chat model's context window in tokens
 	// (content_length). Prompt-packing helpers use it to size input quotas.
 	ModelContextLen int

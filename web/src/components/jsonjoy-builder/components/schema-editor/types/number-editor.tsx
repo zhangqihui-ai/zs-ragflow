@@ -420,6 +420,7 @@ const NumberEditor: React.FC<NumberEditorProps> = ({
             step={integer ? 1 : 'any'}
           />
           <button
+            data-creation-action
             type="button"
             onClick={handleAddEnumValue}
             className="px-3 py-1 h-8 rounded-md bg-secondary text-xs font-medium hover:bg-secondary/80"

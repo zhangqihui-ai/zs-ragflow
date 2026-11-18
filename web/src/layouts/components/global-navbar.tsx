@@ -1,299 +1,273 @@
-import { useId, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Link, useLocation } from 'react-router';
-
-import { LucideHouse, LucideMenu } from 'lucide-react';
-
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { RAGFlowAvatar } from '@/components/ragflow-avatar';
+import { appName } from '@/conf.json';
+import { useFetchUserInfo } from '@/hooks/use-user-setting-request';
 import { cn } from '@/lib/utils';
 import { Routes } from '@/routes';
-import { supportsCssAnchor } from '@/utils/css-support';
-import { HomeIcon } from '@/components/svg-icon';
+import {
+  Brain,
+  Database,
+  FolderClosed,
+  House,
+  MessagesSquare,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Search,
+  Settings2,
+  Workflow,
+} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link, useLocation } from 'react-router';
 
 const PathMap = {
   [Routes.Datasets]: [Routes.Datasets, Routes.DatasetBase],
   [Routes.Chats]: [Routes.Chats, Routes.Chat],
   [Routes.Searches]: [Routes.Searches, Routes.Search],
-  [Routes.Agents]: [Routes.Agents, Routes.AgentTemplates],
-  [Routes.Memories]: [Routes.Memories, Routes.Memory, Routes.MemoryMessage],
+  [Routes.Agents]: [Routes.Agents, Routes.AgentTemplates, Routes.Agent],
+  [Routes.Memories]: [
+    Routes.Memories,
+    Routes.Memory,
+    Routes.MemoryMessage,
+    Routes.MemorySetting,
+  ],
   [Routes.Files]: [Routes.Files],
 } as const;
 
-// Match on path-segment boundaries, not a loose substring, so e.g.
-// "/user-setting/chat-channel" does not match the "/chat" tab.
 const matchesPath = (pathname: string, candidate: string) =>
   pathname === candidate || pathname.startsWith(`${candidate}/`);
 
-// Wrapper so dataset icon shares the same ComponentType<{ className? }>
-// shape as Lucide icons in menuItems (avoids Element-vs-component union).
-const MenuItemsIcon = ({
-  className,
-  name,
-}: {
-  className?: string;
-  name?: string;
-}) => <HomeIcon imgClass={className} name={name || 'datasets'} width={20} />;
-
 const menuItems = [
-  { path: Routes.Root, name: 'header.home', icon: LucideHouse },
-  {
-    path: Routes.Datasets,
-    name: 'header.dataset',
-    icon: MenuItemsIcon,
-    icon_name: 'datasets',
-  },
+  { path: Routes.Root, name: 'header.home', icon: House },
+  { path: Routes.Datasets, name: 'header.dataset', icon: Database },
   {
     path: Routes.Chats,
     name: 'header.chat',
-    icon: MenuItemsIcon,
-    icon_name: 'chats',
-    'data-testid': 'nav-chat',
+    icon: MessagesSquare,
+    testId: 'nav-chat',
   },
   {
     path: Routes.Searches,
     name: 'header.search',
-    icon: MenuItemsIcon,
-    icon_name: 'searches',
-    'data-testid': 'nav-search',
+    icon: Search,
+    testId: 'nav-search',
   },
   {
     path: Routes.Agents,
     name: 'header.flow',
-    icon: MenuItemsIcon,
-    icon_name: 'agents',
-    'data-testid': 'nav-agent',
+    icon: Workflow,
+    testId: 'nav-agent',
   },
-  {
-    path: Routes.Memories,
-    name: 'header.memories',
-    icon: MenuItemsIcon,
-    icon_name: 'memory',
-  },
-  {
-    path: Routes.Files,
-    name: 'header.fileManager',
-    icon: MenuItemsIcon,
-    icon_name: 'file',
-  },
+  { path: Routes.Memories, name: 'header.memories', icon: Brain },
+  { path: Routes.Files, name: 'header.fileManager', icon: FolderClosed },
 ];
 
 function useActivePath() {
   const { pathname } = useLocation();
-
-  return useMemo(() => {
-    return (
-      Object.keys(PathMap).find((x: string) =>
-        PathMap[x as keyof typeof PathMap].some((y: string) =>
-          matchesPath(pathname, y),
+  return useMemo(
+    () =>
+      Object.keys(PathMap).find((path) =>
+        PathMap[path as keyof typeof PathMap].some((candidate) =>
+          matchesPath(pathname, candidate),
         ),
-      ) || pathname
-    );
-  }, [pathname]);
-}
-
-const DesktopNavbarWithAnchor = () => {
-  const { t } = useTranslation();
-  const activePath = useActivePath();
-  const navbarAnchorNamePrefix = useId().replace(/:/g, '');
-
-  const activePathAnchorName = `--${navbarAnchorNamePrefix}${activePath === Routes.Root ? '-root' : activePath.replace('/', '-')}`;
-
-  const hasAnyActive = useMemo(
-    () => menuItems.some(({ path }) => path === activePath),
-    [activePath],
-  );
-
-  return (
-    <nav>
-      <ul className="relative flex items-center p-1 bg-bg-card rounded-full border border-border-button">
-        {menuItems.map(({ path, name, icon: Icon, ...props }) => {
-          const isActive = path === activePath;
-          const anchorName = `--${navbarAnchorNamePrefix}${path === Routes.Root ? '-root' : path.replace('/', '-')}`;
-
-          return (
-            <li key={path} className="relative" style={{ anchorName }}>
-              <Link
-                {...props}
-                to={path}
-                className={cn(
-                  'h-10 px-4 xl:px-6 text-sm xl:text-base inline-flex items-center justify-center whitespace-nowrap',
-                  'hover:text-current focus-visible:text-current rounded-full transition-all',
-                  isActive && '!text-bg-base',
-                )}
-                aria-current={isActive ? 'page' : undefined}
-              >
-                {path === Routes.Root ? (
-                  <>
-                    <Icon className="size-6 stroke-[1.5]" />
-                    <span className="sr-only">{t(name)}</span>
-                  </>
-                ) : (
-                  <span>{t(name)}</span>
-                )}
-              </Link>
-            </li>
-          );
-        })}
-
-        <li
-          className={cn(
-            'absolute -z-[1] bg-text-primary border-b-2 border-b-accent-primary rounded-full opacity-0',
-            'transition-all',
-            hasAnyActive && 'opacity-100',
-          )}
-          role="presentation"
-          style={{
-            top: 'anchor(top)',
-            left: 'anchor(left)',
-            width: 'anchor-size(width)',
-            height: 'anchor-size(height)',
-            positionAnchor: activePathAnchorName,
-          }}
-        />
-      </ul>
-    </nav>
-  );
-};
-
-const DesktopNavbarFallback = () => {
-  const { t } = useTranslation();
-  const activePath = useActivePath();
-
-  return (
-    <nav>
-      <ul className="flex items-center p-1 bg-bg-card rounded-full border border-border-button">
-        {menuItems.map(({ path, name, icon: Icon, ...props }) => {
-          const isActive = path === activePath;
-
-          return (
-            <li key={path}>
-              <Link
-                {...props}
-                to={path}
-                className={cn(
-                  'h-10 px-4 xl:px-6 text-sm xl:text-base inline-flex items-center justify-center whitespace-nowrap',
-                  'hover:text-current focus-visible:text-current rounded-full transition-all',
-                  isActive &&
-                    '!text-bg-base bg-text-primary border-b-2 border-b-accent-primary',
-                )}
-                aria-label={t(name)}
-                aria-current={isActive ? 'page' : undefined}
-              >
-                {path === Routes.Root ? (
-                  <Icon className="size-6 stroke-[1.5]" />
-                ) : (
-                  <span>{t(name)}</span>
-                )}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
-  );
-};
-
-export function DesktopNavbar() {
-  return supportsCssAnchor ? (
-    <DesktopNavbarWithAnchor />
-  ) : (
-    <DesktopNavbarFallback />
+      ) || (pathname === Routes.Home ? Routes.Root : pathname),
+    [pathname],
   );
 }
 
-function MobileNavItem({
-  label,
-  icon: Icon,
-  icon_name,
-  isActive,
-  onClick,
-  ...linkProps
-}: {
-  label: string;
-  icon: React.ComponentType<{ className?: string; name?: string }>;
-  icon_name?: string;
-  isActive?: boolean;
-  onClick?: () => void;
-  to: string;
-  'data-testid'?: string;
-}) {
+const storageKey = 'ragflow-sidebar-collapsed';
+
+const primaryNavItemClass =
+  'flex h-12 min-w-0 items-center gap-3 rounded-xl px-3 text-lg font-normal text-text-secondary transition-colors hover:bg-bg-card hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nav-active-text focus-visible:ring-inset';
+
+const navActiveItemClass =
+  '!bg-nav-active-bg !text-nav-active-text hover:!bg-nav-active-bg hover:!text-nav-active-text focus-visible:!bg-nav-active-bg focus-visible:!text-nav-active-text';
+
+function SidebarFooter({ collapsed }: { collapsed: boolean }) {
+  const { t } = useTranslation();
+  const { pathname } = useLocation();
+  const { data: user } = useFetchUserInfo();
+  const name = user.nickname || user.email || t('header.user');
+  const role = user.id
+    ? t(user.is_superuser ? 'header.administrator' : 'header.member')
+    : '—';
+  const settingsActive = [Routes.UserSetting, Routes.ProfileSetting].some(
+    (path) => matchesPath(pathname, path),
+  );
+
   return (
-    <Link
-      {...linkProps}
-      onClick={onClick}
-      className={cn(
-        'flex w-full items-center gap-3.5 px-4 py-3.5 text-base',
-        'text-text-secondary transition-colors hover:bg-bg-card hover:text-text-primary',
-        'focus-visible:bg-bg-card focus-visible:text-text-primary',
-        isActive &&
-          'border-l-2 border-text-primary bg-bg-card font-medium text-text-primary',
-      )}
-      aria-current={isActive ? 'page' : undefined}
+    <div
+      className="shrink-0 border-t border-border-button p-2"
+      data-testid="sidebar-footer"
     >
-      <Icon className="size-5 shrink-0 stroke-[1.5]" name={icon_name} />
-      <span className="truncate">{label}</span>
-    </Link>
+      <Link
+        to={Routes.UserSetting}
+        aria-label={t('header.settings')}
+        aria-current={settingsActive ? 'page' : undefined}
+        title={t('header.settings')}
+        data-testid="settings-entrypoint"
+        className={cn(
+          primaryNavItemClass,
+          collapsed && 'justify-center px-0',
+          settingsActive && navActiveItemClass,
+        )}
+      >
+        <Settings2
+          className="size-5 shrink-0 stroke-[1.8]"
+          aria-hidden="true"
+        />
+        <span className={collapsed ? 'sr-only' : 'truncate'}>
+          {t('header.settings')}
+        </span>
+      </Link>
+      <Link
+        to={Routes.UserSetting}
+        aria-label={`${name} · ${role}`}
+        title={`${name} · ${role}`}
+        data-testid="sidebar-user-info"
+        className={cn(
+          'mt-1 flex min-w-0 items-center gap-3 rounded-xl px-3 py-2 text-text-primary transition-colors hover:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nav-active-text focus-visible:ring-inset',
+          collapsed && 'justify-center px-0',
+        )}
+      >
+        <RAGFlowAvatar
+          name={name}
+          avatar={user.avatar}
+          isPerson
+          className="size-8 shrink-0 rounded-full"
+        />
+        <div
+          className={
+            collapsed ? 'sr-only' : 'flex min-w-0 flex-1 flex-col gap-0.5'
+          }
+        >
+          <span className="truncate text-sm font-medium" title={name}>
+            {name}
+          </span>
+          <span className="truncate text-xs text-text-secondary" title={role}>
+            {role}
+          </span>
+        </div>
+      </Link>
+    </div>
   );
 }
 
-type MobileNavbarProps = {
-  renderFooter?: (close: () => void) => React.ReactNode;
-};
-
-export function MobileNavbar({ renderFooter }: MobileNavbarProps) {
+export function SidebarNavbar() {
   const { t } = useTranslation();
   const activePath = useActivePath();
-  const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (window.matchMedia('(max-width: 767px)').matches) return true;
+    return localStorage.getItem(storageKey) === 'true';
+  });
 
-  const close = () => setOpen(false);
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px)');
+    const onChange = () => {
+      if (media.matches) setCollapsed(true);
+    };
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
+  }, []);
+
+  const toggle = () => {
+    setCollapsed((previous) => {
+      localStorage.setItem(storageKey, String(!previous));
+      return !previous;
+    });
+  };
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
+    <aside
+      className={cn(
+        'navigation-sidebar flex h-full min-h-0 shrink-0 flex-col border-r border-border-button bg-bg-base transition-[width] duration-200 motion-reduce:transition-none',
+        collapsed ? 'w-16' : 'w-44 md:w-56',
+      )}
+      data-testid="global-sidebar"
+      data-collapsed={collapsed}
+    >
+      <div
+        className={cn(
+          'flex h-[72px] shrink-0 items-center',
+          collapsed
+            ? 'flex-col justify-center gap-1 px-2'
+            : 'justify-between gap-2 px-3',
+        )}
+      >
+        <Link
+          to={Routes.Root}
+          aria-label={appName}
+          className="flex min-w-0 items-center gap-2"
+          title={appName}
+        >
+          <img
+            src="/zs-logo-bright.png"
+            alt=""
+            className="h-8 w-10 shrink-0 object-contain"
+          />
+          {!collapsed && (
+            <span className="min-w-0 truncate text-lg font-semibold tracking-wide md:text-xl">
+              {appName}
+            </span>
+          )}
+        </Link>
         <Button
           variant="ghost"
           size="icon"
-          className="size-10 shrink-0"
-          aria-label="Menu"
+          onClick={toggle}
+          aria-label={t(
+            collapsed ? 'header.expandSidebar' : 'header.collapseSidebar',
+          )}
+          aria-expanded={!collapsed}
+          aria-controls="global-navigation"
+          title={t(
+            collapsed ? 'header.expandSidebar' : 'header.collapseSidebar',
+          )}
+          className={cn('shrink-0', collapsed ? 'size-8' : 'size-9')}
         >
-          <LucideMenu className="size-6 stroke-[1.75]" />
+          {collapsed ? (
+            <PanelLeftOpen className="size-5" />
+          ) : (
+            <PanelLeftClose className="size-5" />
+          )}
         </Button>
-      </SheetTrigger>
-
-      <SheetContent
-        side="left"
-        closeIcon={false}
-        className="flex w-[min(85vw,18rem)] flex-col gap-0 p-0 sm:w-72"
+      </div>
+      <nav
+        id="global-navigation"
+        aria-label={t('header.mainNavigation')}
+        className="min-h-0 flex-1 overflow-y-auto px-2 pb-4"
       >
-        <div className="flex shrink-0 justify-center py-5">
-          <img src="/logo.svg" alt="RAGFlow logo" className="size-9" />
-        </div>
-
-        <nav className="min-h-0 flex-1 overflow-y-auto py-3">
-          <ul className="space-y-1">
-            {menuItems.map(({ path, name, icon_name, icon, ...props }) => (
+        <ul className="space-y-2">
+          {menuItems.map(({ path, name, icon: Icon, testId }) => {
+            const active = activePath === path;
+            return (
               <li key={path}>
-                <MobileNavItem
-                  {...props}
+                <Link
                   to={path}
-                  label={t(name)}
-                  icon={icon}
-                  icon_name={icon_name}
-                  isActive={path === activePath}
-                  onClick={close}
-                />
+                  data-testid={testId}
+                  aria-label={t(name)}
+                  aria-current={active ? 'page' : undefined}
+                  title={t(name)}
+                  className={cn(
+                    primaryNavItemClass,
+                    collapsed && 'justify-center px-0',
+                    active && navActiveItemClass,
+                  )}
+                >
+                  <Icon
+                    className="size-5 shrink-0 stroke-[1.8]"
+                    aria-hidden="true"
+                  />
+                  <span className={collapsed ? 'sr-only' : 'min-w-0 truncate'}>
+                    {t(name)}
+                  </span>
+                </Link>
               </li>
-            ))}
-          </ul>
-        </nav>
-
-        {renderFooter?.(close)}
-      </SheetContent>
-    </Sheet>
+            );
+          })}
+        </ul>
+      </nav>
+      <SidebarFooter collapsed={collapsed} />
+    </aside>
   );
 }
-
-const GlobalNavbar = DesktopNavbar;
-
-export default GlobalNavbar;

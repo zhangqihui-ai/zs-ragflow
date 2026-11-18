@@ -99,6 +99,7 @@ const ChunkCreatingModal: React.FC<IModalProps<any> & kFProps> = ({
   return (
     <Modal
       title={t(chunkId ? 'chunk.editChunk' : 'chunk.createChunk')}
+      okButtonClassName={chunkId ? undefined : 'creation-action'}
       open={true}
       onOk={handleOk}
       onCancel={hideModal}

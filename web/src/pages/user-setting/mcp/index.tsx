@@ -164,11 +164,15 @@ export default function McpServer() {
                 </Button>
               }
             >
-              <Button variant="outline" onClick={showImportModal}>
+              <Button
+                data-creation-action
+                variant="outline"
+                onClick={showImportModal}
+              >
                 <Download className="size-3.5" />
                 {t('mcp.import')}
               </Button>
-              <Button onClick={showEditModal('')}>
+              <Button data-creation-action onClick={showEditModal('')}>
                 <Plus /> {t('mcp.addMCP')}
               </Button>
             </McpToolbarGuard>
@@ -247,7 +251,7 @@ export default function McpServer() {
           <McpEmptyStateGuard
             mcpList={data.mcp_servers}
             addButton={
-              <Button variant="outline">
+              <Button data-creation-action variant="outline">
                 <Plus />
                 {t('empty.addNow')}
               </Button>

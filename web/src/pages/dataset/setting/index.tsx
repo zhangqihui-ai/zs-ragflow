@@ -51,6 +51,34 @@ import { ApplyParserConfigDialog } from './apply-parser-config-dialog';
 
 export default function DatasetSetting() {
   const { t } = useTranslation();
+  const operatorTabLabels = useMemo(
+    () => ({
+      Parser: t('knowledgeConfiguration.operatorTabs.parser'),
+      'General Chunker': t(
+        'knowledgeConfiguration.operatorTabs.generalChunker',
+      ),
+      'Manual Chunker': t('knowledgeConfiguration.operatorTabs.manualChunker'),
+      'QA Chunker': t('knowledgeConfiguration.operatorTabs.qaChunker'),
+      'Table Chunker': t('knowledgeConfiguration.operatorTabs.tableChunker'),
+      'Title Chunker': t('knowledgeConfiguration.operatorTabs.titleChunker'),
+      'One Chunker': t('knowledgeConfiguration.operatorTabs.oneChunker'),
+      'Audio Chunker': t('knowledgeConfiguration.operatorTabs.audioChunker'),
+      'Picture Chunker': t(
+        'knowledgeConfiguration.operatorTabs.pictureChunker',
+      ),
+      'Presentation Chunker': t(
+        'knowledgeConfiguration.operatorTabs.presentationChunker',
+      ),
+      'Email Chunker': t('knowledgeConfiguration.operatorTabs.emailChunker'),
+      'Token Chunker': t('knowledgeConfiguration.operatorTabs.tokenChunker'),
+      'Page Chunker': t('knowledgeConfiguration.operatorTabs.pageChunker'),
+      Extractor: t('knowledgeConfiguration.operatorTabs.extractor'),
+      Indexer: t('knowledgeConfiguration.operatorTabs.indexer'),
+      Tokenizer: t('knowledgeConfiguration.operatorTabs.tokenizer'),
+      Compiler: t('knowledgeConfiguration.operatorTabs.compiler'),
+    }),
+    [t],
+  );
 
   // The missing verdict lives behind a ref because the schema must exist
   // before useForm runs, while the verdict derives from the form's watched
@@ -371,6 +399,7 @@ export default function DatasetSetting() {
                   </FormItem>
                   {showOperatorTabs && (
                     <PipelineOperatorTabs
+                      tabLabels={operatorTabLabels}
                       nodes={operatorNodes}
                       activeTab={activeTab}
                       onTabChange={setActiveTab}
@@ -407,6 +436,7 @@ export default function DatasetSetting() {
                 </Button>
 
                 <ButtonLoading
+                  className="creation-action"
                   type="submit"
                   loading={
                     datasetSettingLoading ||

@@ -301,7 +301,12 @@ export function FileUploadDialog({
           isTableParser={isTableParser}
         />
         <DialogFooter>
-          <ButtonLoading type="submit" loading={loading} form={UploadFormId}>
+          <ButtonLoading
+            data-creation-action
+            type="submit"
+            loading={loading}
+            form={UploadFormId}
+          >
             {t('common.save')}
           </ButtonLoading>
         </DialogFooter>

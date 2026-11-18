@@ -67,6 +67,7 @@ export function MetadataSemiAutoFields({
       <div className="flex items-center justify-between">
         <FormLabel>{t('chat.metadataKeys')}</FormLabel>
         <Button
+          data-creation-action
           variant={'outline'}
           type="button"
           size="sm"

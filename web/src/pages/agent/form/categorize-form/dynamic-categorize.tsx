@@ -238,7 +238,7 @@ const DynamicCategorize = ({ nodeId }: IProps) => {
         </div>
       ))}
 
-      <Button type={'button'} onClick={handleAdd}>
+      <Button data-creation-action type={'button'} onClick={handleAdd}>
         <PlusOutlined />
         {t('addCategory')}
       </Button>

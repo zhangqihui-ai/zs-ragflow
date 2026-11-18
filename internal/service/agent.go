@@ -463,6 +463,7 @@ type AgentItem struct {
 	Tags               string  `json:"tags"`
 	CanvasType         *string `json:"canvas_type,omitempty"`
 	CanvasCategory     string  `json:"canvas_category"`
+	CompilationKind    string  `json:"compilation_kind,omitempty"`
 	OperatorPermission int32   `json:"operator_permission,omitempty"`
 	CreateTime         *int64  `json:"create_time,omitempty"`
 	UpdateTime         *int64  `json:"update_time,omitempty"`
@@ -747,6 +748,13 @@ func (s *AgentService) ListAgents(ctx context.Context, keywords string, page, pa
 		}
 		c.OperatorPermission = access.PermissionMask
 		agentItems[i] = toAgentItem(c)
+	}
+	kinds, err := pipelineCompilationKinds(ctx, canvases)
+	if err != nil {
+		zap.L().Warn("load pipeline compilation kinds", zap.Error(err))
+	}
+	for _, item := range agentItems {
+		item.CompilationKind = kinds[item.ID]
 	}
 	s.attachReleaseTimes(ctx, agentItems)
 

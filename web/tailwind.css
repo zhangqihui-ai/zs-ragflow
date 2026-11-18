@@ -98,6 +98,21 @@
     --border-button: rgba(0, 0, 0, 0.1);
     /* Regulators, parsing, switches, variables */
     --accent-primary: 0 190 180;
+    --nav-active-bg: #e8f2ff;
+    --nav-active-text: #1677ff;
+    --creation-primary: #0033ff;
+    --creation-primary-hover: #0029d6;
+    --creation-on-primary: #ffffff;
+    --input-surface: #ffffff;
+    --input-idle-border: #d9dfe8;
+    --input-focus-border: var(--creation-primary);
+    --dashboard-blue: #3478f6;
+    --dashboard-blue-soft: #a9c6f4;
+    --dashboard-teal: #10b7a7;
+    --dashboard-purple: #8a63ef;
+    --dashboard-orange: #f5a340;
+    --dashboard-cyan: #32a8d4;
+    --dashboard-muted: #a0aec0;
     /* Categorical graph fills shared by light and dark themes. */
     --graph-node-1: #4e79a7;
     --graph-node-2: #b96b1d;
@@ -216,6 +231,15 @@
 
     /* #f6f6f7 */
     --text-primary: 246 246 247;
+    --nav-active-bg: #172c47;
+    --nav-active-text: #69aaff;
+    --dashboard-blue: #69aaff;
+    --dashboard-blue-soft: #345984;
+    --dashboard-teal: #3bd4c5;
+    --dashboard-purple: #b39aff;
+    --dashboard-orange: #ffc079;
+    --dashboard-cyan: #7cd4f1;
+    --dashboard-muted: #8799b0;
     --text-secondary: 178 181 183;
     --text-disabled: #75787a;
     --border-default: rgba(255, 255, 255, 0.2);
@@ -308,4 +332,79 @@
   .dark .scrollbar-auto:active::-webkit-scrollbar-thumb {
     background-color: rgba(255, 255, 255, 0.3);
   }
+}
+
+.navigation-sidebar {
+  --nav-active-bg: color-mix(
+    in srgb,
+    var(--creation-primary) 10%,
+    var(--bg-base)
+  );
+  --nav-active-text: var(--creation-primary);
+}
+
+/* Creation actions opt in without changing the shared button variants. */
+:is(button, a)[data-creation-action='true'],
+button.creation-action {
+  background-color: var(--creation-primary);
+  color: var(--creation-on-primary);
+}
+
+:is(button, a)[data-creation-action='true']:hover,
+:is(button, a)[data-creation-action='true']:focus-visible,
+button.creation-action:hover,
+button.creation-action:focus-visible {
+  background-color: var(--creation-primary-hover);
+  color: var(--creation-on-primary);
+}
+
+/* Text-entry surfaces share colors without changing control dimensions. */
+:is(input, textarea):not(
+  :is(
+    [type='checkbox'],
+    [type='radio'],
+    [type='range'],
+    [type='color'],
+    [type='file'],
+    [type='hidden'],
+    [type='button'],
+    [type='submit'],
+    [type='reset'],
+    [type='image']
+  )
+),
+[class~='focus-within:ring-accent-primary']:has(input),
+[data-input-surface] {
+  background-color: var(--input-surface);
+  &:not([aria-invalid='true']) {
+    border-color: var(--input-idle-border);
+  }
+}
+
+:is(input, textarea):not(
+    :is(
+      [type='checkbox'],
+      [type='radio'],
+      [type='range'],
+      [type='color'],
+      [type='file'],
+      [type='hidden'],
+      [type='button'],
+      [type='submit'],
+      [type='reset'],
+      [type='image']
+    )
+  ):not(
+    :where(
+      [class~='focus-within:ring-accent-primary'] input,
+      [data-input-surface] textarea
+    )
+  ):not([aria-invalid='true']):focus,
+[class~='focus-within:ring-accent-primary']:has(input:focus),
+[data-input-surface]:has(textarea:focus) {
+  --tw-ring-color: transparent;
+  --tw-ring-offset-width: 0px;
+  border-color: var(--input-focus-border);
+  outline: 1px solid var(--input-focus-border);
+  outline-offset: 0px;
 }

@@ -22,7 +22,11 @@ import { useParams } from 'react-router';
 import { MetadataType } from '../components/metedata/constant';
 import { ShowManageMetadataModalProps } from '../components/metedata/interface';
 import { DatasetActionCell } from './dataset-action-cell';
-import { ParseDropdownButton, ParsingStatusCell } from './parsing-status-cell';
+import {
+  ParseDropdownButton,
+  ParsingStatusBadge,
+  ParsingStatusCell,
+} from './parsing-status-cell';
 import { UseChangeDocumentParserShowType } from './use-change-document-parser';
 import { UseRenameDocumentShowType } from './use-rename-document';
 
@@ -236,15 +240,18 @@ export function useDatasetTableColumns({
       },
       {
         id: 'run-status',
-        header: '',
+        header: t('status'),
         cell: ({ row }) => {
           return (
-            <ParsingStatusCell
-              record={row.original}
-              showChangeParserModal={showChangeParserModal}
-              showLog={showLog}
-              datasetEditButtonDisabled={datasetEditButtonDisabled}
-            />
+            <div className="flex items-center gap-2">
+              <ParsingStatusBadge record={row.original} />
+              <ParsingStatusCell
+                record={row.original}
+                showChangeParserModal={showChangeParserModal}
+                showLog={showLog}
+                datasetEditButtonDisabled={datasetEditButtonDisabled}
+              />
+            </div>
           );
         },
       },

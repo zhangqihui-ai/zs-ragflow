@@ -70,6 +70,31 @@ export const citationMarkerReg =
 export const citationWholeMarkerReg =
   /(\[(?:ID:)?[0-9a-fA-F\u0660-\u0669\u06F0-\u06F9]+\])/g;
 
+// A document-level source label links to a retrieved passage from that
+// document. Use the reference's existing chunk marker to display the source.
+export function replaceDocumentIdCitations(
+  content: string,
+  chunks: IReferenceChunk[] | Record<string, IReferenceChunk> | undefined,
+): string {
+  const documentMarkers = new Map<string, string>();
+  Object.values(chunks ?? {}).forEach((chunk, index) => {
+    const documentId = chunk.document_id || chunk.doc_id;
+    if (!documentId || documentMarkers.has(documentId)) return;
+    const chunkId = chunk.id || chunk.chunk_id;
+    const key =
+      chunkId &&
+      /^[0-9a-f]+$/i.test(chunkId) &&
+      !isNumericCitationIndex(chunkId)
+        ? chunkId
+        : index;
+    documentMarkers.set(documentId, `[ID:${key}]`);
+  });
+  return content.replace(
+    /(?:文档\s*ID|document[ _-]?id|doc_id)\s*[:：]\s*([a-f0-9]{32})(?![\w-])/gi,
+    (label, id: string) => documentMarkers.get(id) ?? label,
+  );
+}
+
 // Resolve the chunk a citation marker points at. A numeric key is the
 // chunk's position in the payload — the plain-chat contract, where the
 // backend numbers each marker by its index into reference.chunks. A string

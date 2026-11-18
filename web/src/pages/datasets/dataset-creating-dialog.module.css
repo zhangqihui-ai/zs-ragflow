@@ -1,0 +1,61 @@
+.dialog,
+:global(
+  body:has([data-testid='dataset-creating-dialog'])
+    [data-radix-popper-content-wrapper]
+) {
+  --bg-input: var(--bg-base);
+  --border-button: color-mix(in srgb, var(--nav-active-text) 24%, transparent);
+  --border-default: color-mix(in srgb, var(--nav-active-text) 24%, transparent);
+  --border-accent: var(--nav-active-text);
+}
+
+.dialog {
+  border: 1px solid var(--border-button);
+}
+
+.title,
+.dialog label {
+  color: color-mix(
+    in srgb,
+    var(--nav-active-text) 45%,
+    rgb(var(--text-primary))
+  );
+}
+
+.dialog input,
+.dialog button[aria-haspopup='dialog'] {
+  border-radius: 8px;
+  background: var(--bg-base);
+}
+
+.dialog button[aria-haspopup='dialog']:hover,
+.dialog button[aria-haspopup='dialog']:focus-visible {
+  border-color: var(--nav-active-text);
+  background: var(--bg-base);
+  outline: 2px solid var(--nav-active-bg);
+}
+
+.dialog span[class~='bg-bg-card'],
+:global(
+  body:has([data-testid='dataset-creating-dialog'])
+    [data-radix-popper-content-wrapper]
+    span[class~='bg-bg-card']
+) {
+  background: var(--nav-active-bg);
+  color: var(--nav-active-text);
+}
+
+.dialog > button {
+  border-radius: 8px;
+  color: color-mix(
+    in srgb,
+    var(--nav-active-text) 40%,
+    rgb(var(--text-secondary))
+  );
+}
+
+.dialog > button:hover,
+.dialog > button:focus-visible {
+  background: var(--nav-active-bg);
+  color: var(--nav-active-text);
+}

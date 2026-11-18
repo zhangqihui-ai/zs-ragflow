@@ -41,21 +41,23 @@ function resolveMinify(value: string | undefined): MinifyValue {
 export default defineConfig(({ mode }) => {
   // Load env from .env file (also loads .env.local, .env.[mode], .env.[mode].local)
   const env = loadEnv(mode, process.cwd(), '');
+  const apiTarget = env.DEV_API_TARGET || 'http://127.0.0.1:9380/';
+  const adminTarget = env.DEV_ADMIN_TARGET || 'http://127.0.0.1:9381/';
 
   // The frontend serves only the Go backend.
   const proxy = {
     '/api/v1/admin': {
-      target: 'http://127.0.0.1:9381/',
+      target: adminTarget,
       changeOrigin: true,
       ws: true,
     },
     '/api': {
-      target: 'http://127.0.0.1:9380/',
+      target: apiTarget,
       changeOrigin: true,
       ws: true,
     },
     '/v1': {
-      target: 'http://127.0.0.1:9380/',
+      target: apiTarget,
       changeOrigin: true,
       ws: true,
     },
@@ -121,6 +123,9 @@ export default defineConfig(({ mode }) => {
     server: {
       port: Number(env.PORT) || 9222,
       strictPort: false,
+      watch: {
+        usePolling: env.DEV_USE_POLLING === 'true',
+      },
       hmr: {
         overlay: false,
       },

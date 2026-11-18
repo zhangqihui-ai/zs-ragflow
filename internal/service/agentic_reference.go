@@ -51,6 +51,7 @@ func (s *ChatPipelineService) buildAgenticReference(ctx context.Context, tenantI
 	//   - several handles compressed into one marker ("[ID:47, ID:115]").
 	normalized := agentic_rag.ExpandCommaCitations(
 		RepairBadCitationFormats(final), len(registry.IDs()))
+	normalized = agentic_rag.NormalizeChunkCitations(normalized, registry)
 	// A model may cite a web result with a Markdown link instead of its
 	// handle. Only links to sources actually shown during this run qualify.
 	linkedURLs := make(map[string]bool)

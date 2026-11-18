@@ -74,6 +74,8 @@ func (f *ModelFactory) CreateModelDriver(providerName string, baseURL map[string
 		return NewLlmmanModel(baseURL, urlSuffix), nil
 	case "ollama":
 		return NewOllamaModel(baseURL, urlSuffix), nil
+	case "opendataloader":
+		return NewOpenDataLoaderModel(baseURL, urlSuffix), nil
 	case "openai":
 		return NewOpenAIModel(baseURL, urlSuffix), nil
 	case "groq":

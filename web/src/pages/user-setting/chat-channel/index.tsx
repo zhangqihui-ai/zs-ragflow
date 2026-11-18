@@ -47,6 +47,7 @@ const AvailableChannelCard = ({
       <header className="flex items-center gap-2" style={{ gridArea: 'title' }}>
         <h3 className="text-base text-text-primary">{name}</h3>
         <Button
+          data-creation-action
           size="auto"
           className="ml-auto px-1 py-0.5 gap-0.5 text-xs items-center opacity-0 transition-all group-hover:opacity-100 group-focus-within:opacity-100"
           onClick={(e: any) => {

@@ -23,7 +23,6 @@ import (
 
 	"ragflow/internal/common"
 	"ragflow/internal/entity"
-	"ragflow/internal/permission"
 )
 
 // mistralOCRStoredKey is the api_key Python's "Mistral OCR" factory stored when
@@ -50,98 +49,7 @@ func seedStoredMistralOCRProvider(t *testing.T, db *gorm.DB) {
 	}
 }
 
-// Model references stored under the "Mistral OCR" provider name resolve to the
-// Mistral driver and catalog entry, whether they name the tenant model by id
-// or by composite, enrolled or catalog-only. The target keeps the stored
-// provider name and the stored key.
-func TestModelFactoryResolvesStoredMistralOCRProvider(t *testing.T) {
-	db := setupModelProviderServiceTestDB(t)
-	useModelProviderServiceTestDB(t, db)
-	seedStoredMistralOCRProvider(t, db)
-
-	for _, tc := range []struct {
-		name      string
-		modelRef  string
-		wantModel string
-	}{
-		{name: "tenant model id", modelRef: "model-mistral-ocr", wantModel: "mistral-ocr-latest"},
-		{name: "enrolled composite", modelRef: "mistral-ocr-latest@default@Mistral OCR", wantModel: "mistral-ocr-latest"},
-		{name: "catalog composite", modelRef: "mistral-ocr-2512@default@Mistral OCR", wantModel: "mistral-ocr-2512"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			target, err := NewModelFactory().resolveConfig(serviceTestContext(t, "user-1", "user-1"), entity.ModelTypeOCR, tc.modelRef)
-			if err != nil {
-				t.Fatalf("resolveConfig(%q): %v", tc.modelRef, err)
-			}
-			if target.Driver == nil || target.Driver.Name() != "mistral" {
-				t.Fatalf("driver = %v, want the mistral driver", target.Driver)
-			}
-			if target.ModelName != tc.wantModel || target.ModelInfo == nil || !target.ModelInfo.ModelTypeMap["ocr"] {
-				t.Fatalf("model = %q / %+v, want %s from the catalog", target.ModelName, target.ModelInfo, tc.wantModel)
-			}
-			if target.ProviderName != "Mistral OCR" {
-				t.Fatalf("provider name = %q, want the stored name", target.ProviderName)
-			}
-			if target.APIConfig == nil || target.APIConfig.ApiKey == nil || *target.APIConfig.ApiKey != mistralOCRStoredKey {
-				t.Fatalf("api key = %v, want the stored key", target.APIConfig)
-			}
-		})
-	}
-}
-
-// ResolveModelType reads the catalog types of a composite reference that is
-// not enrolled under the "Mistral OCR" provider row.
-func TestModelFactoryResolveModelTypeForStoredMistralOCRProvider(t *testing.T) {
-	db := setupModelProviderServiceTestDB(t)
-	useModelProviderServiceTestDB(t, db)
-	seedStoredMistralOCRProvider(t, db)
-
-	types, err := NewModelFactory().ResolveModelType(permission.WithTenantID(serviceTestContext(t, "user-1", "user-1"), "user-1"), "mistral-ocr-2512@default@Mistral OCR")
-	if err != nil {
-		t.Fatalf("ResolveModelType: %v", err)
-	}
-	if len(types) != 1 || types[0] != entity.ModelTypeOCR {
-		t.Fatalf("types = %v, want [ocr]", types)
-	}
-}
-
-// Tool support falls back to the catalog entry of the mapped provider.
-func TestCatalogToolSupportForStoredMistralOCRProvider(t *testing.T) {
-	if !catalogToolSupport("Mistral", "mistral-large-latest") {
-		t.Skip("Mistral catalog no longer lists tool support for mistral-large-latest")
-	}
-	if !catalogToolSupport("Mistral OCR", "mistral-large-latest") {
-		t.Fatal(`catalogToolSupport("Mistral OCR", "mistral-large-latest") = false, want the Mistral catalog value`)
-	}
-}
-
-// ModelFactory preserves the stored OCR capability for the Mistral OCR provider.
-func TestModelFactoryResolvesStoredMistralOCRCapability(t *testing.T) {
-	db := setupModelProviderServiceTestDB(t)
-	useModelProviderServiceTestDB(t, db)
-	seedStoredMistralOCRProvider(t, db)
-
-	factory := NewModelFactory()
-	for _, modelRef := range []string{"model-mistral-ocr", "mistral-ocr-latest@default@Mistral OCR"} {
-		t.Run(modelRef, func(t *testing.T) {
-			target, err := factory.resolveConfig(permission.WithTenantID(serviceTestContext(t, "user-1", "user-1"), "user-1"), 0, modelRef)
-			if err != nil {
-				t.Fatalf("resolve model %q: %v", modelRef, err)
-			}
-			if target.ProviderName != "Mistral OCR" {
-				t.Fatalf("provider name = %q, want the stored provider row", target.ProviderName)
-			}
-			if target.ModelInfo == nil || target.ModelInfo.Name != "mistral-ocr-latest" {
-				t.Fatalf("model info = %+v, want mistral-ocr-latest", target.ModelInfo)
-			}
-			if !target.ModelInfo.ModelTypeMap["ocr"] || target.ModelInfo.ModelTypeMap["doc_parse"] {
-				t.Fatalf("model info = %+v, want OCR capability without unsupported document-parse capability", target.ModelInfo)
-			}
-		})
-	}
-}
-
-// The mapping is limited to model resolution: the provider list still skips a
+// The provider list skips a
 // "Mistral OCR" row, as it does for any name the catalog does not serve.
 func TestListProvidersOfTenantSkipsStoredMistralOCRProvider(t *testing.T) {
 	db := setupModelProviderServiceTestDB(t)

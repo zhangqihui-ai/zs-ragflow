@@ -679,6 +679,7 @@ export const GPUStackInstanceCard = forwardRef<
             </p>
             <div>
               <Button
+                data-creation-action
                 onClick={addConnection}
                 disabled={
                   saving ||
@@ -811,6 +812,7 @@ export const GPUStackInstanceCard = forwardRef<
               />
               <div>
                 <Button
+                  data-creation-action
                   onClick={addToSaved}
                   disabled={saving || selectedModels.length === 0}
                   data-testid="gpustack-add-selected"

@@ -125,7 +125,11 @@ export function AddFieldModal({
           <Button type="button" variant="outline" onClick={handleClose}>
             {t('common.cancel')}
           </Button>
-          <Button type="button" onClick={handleSubmit(handleConfirm)}>
+          <Button
+            data-creation-action={!initialField}
+            type="button"
+            onClick={handleSubmit(handleConfirm)}
+          >
             {t('common.confirm')}
           </Button>
         </div>

@@ -152,6 +152,7 @@ export const useObjectFields = () => {
           </div>
         ))}
         <BlockButton
+          data-creation-action
           type="button"
           onClick={() => {
             field.onChange([...field.value, '']);
@@ -198,6 +199,7 @@ export const useObjectFields = () => {
             </div>
           ))}
           <BlockButton
+            data-creation-action
             className="w-auto"
             type="button"
             onClick={() => {

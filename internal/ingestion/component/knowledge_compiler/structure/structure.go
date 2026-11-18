@@ -3,7 +3,7 @@
 // kind) as a two-stage entity → relation LLM extraction with template-driven
 // prompts, followed by LLM-judged in-run merge dedup. Stage semantics and
 // prompts mirror Python's rag/advanced_rag/knowlege_compile/structure.py; the
-// Go port keeps all intermediate state in memory (no ES reads/writes).
+// graph runs can reuse persisted intermediate stage results.
 package structure
 
 import (
@@ -14,7 +14,16 @@ import (
 	"ragflow/internal/agent/runtime"
 	appcommon "ragflow/internal/common"
 	"ragflow/internal/ingestion/component/knowledge_compiler/common"
+	"ragflow/internal/tokenizer"
 )
+
+const graphBatchTokenLimit = 8192
+
+type graphTokenizer struct{}
+
+func (graphTokenizer) NumTokens(text string) int {
+	return tokenizer.NumTokensFromString(text)
+}
 
 // batchSubmitter fans out the MAP-stage extraction jobs on the process-wide
 // knowledge-compilation pool. It is injected by the knowledge_compiler wiring
@@ -111,6 +120,10 @@ func Run(ctx context.Context, deps common.Deps, param common.Param, inputs commo
 
 	nodePrompt, edgePromptTmpl := HypergraphPrompts(parserConfig, param.Language)
 	gateMode := EvidenceGateMode(parserConfig)
+	isGraph := compileType == TypeHypergraph
+	if isGraph && deps.Tokenizer == nil {
+		deps.Tokenizer = graphTokenizer{}
+	}
 
 	// ---- MAP ----
 	// Prompt overhead is counted the same way Python does: the larger of the
@@ -130,7 +143,18 @@ func Run(ctx context.Context, deps common.Deps, param common.Param, inputs commo
 		// conservative constant rather than guessing a large window.
 		budget = 4096
 	}
-	batches := common.PackBatches(inputs.Chunks, budget, deps.Tokenizer)
+	chunks := inputs.Chunks
+	var oversizedSources map[string]string
+	if isGraph {
+		budget = min(budget, graphBatchTokenLimit)
+		var err error
+		chunks, oversizedSources, err = splitOversizedGraphChunks(chunks, budget, deps.Tokenizer)
+		if err != nil {
+			return common.Outputs{}, err
+		}
+		runtime.ReportProgressMessage(ctx, "Compiler", fmt.Sprintf("graph extraction: source budget=%d tokens per batch", budget))
+	}
+	batches := common.PackBatches(chunks, budget, deps.Tokenizer)
 	// Python structure.py _STRUCT_MAX_CHUNKS_PER_BATCH: optional chunk-count cap
 	// per extraction batch (0 = window-packed only — a heading has to see its
 	// whole section to own it; the 4-per-batch rule belongs to tree's claim
@@ -140,15 +164,23 @@ func Run(ctx context.Context, deps common.Deps, param common.Param, inputs commo
 	}
 	runtime.ReportProgressMessage(ctx, "Compiler", fmt.Sprintf(
 		"%s-template: %d chunk(s) -> %d batch(es)", compileType, len(inputs.Chunks), len(batches)))
+	checkpoints, err := newGraphCheckpoints(deps, param, cfg, inputs.DocID, batches, nodePrompt, edgePromptTmpl)
+	if err != nil {
+		return common.Outputs{}, err
+	}
+	var completed common.Outputs
+	if checkpoints.load(ctx, "compiled", &completed) {
+		runtime.ReportProgressMessage(ctx, "Compiler", fmt.Sprintf("graph checkpoint: reused compiled output (%d rows)", len(completed.Products)))
+		deps.Progress.Report(ctx, 1)
+		return completed, nil
+	}
 	// Extraction and embedding are two phases (upstream): the pool workers only
 	// extract; buildRows (which calls Embed.Encode) runs serially afterwards so
 	// embedding batch jobs are never nested inside a compiler-pool worker.
-	type extractedBatch struct {
-		nodes, edges []map[string]any
-		batchIDs     []string
-	}
 	extracted := make([]extractedBatch, len(batches))
 	perBatch := make([][]common.Product, len(batches))
+	hasExtraction := make([]bool, len(batches))
+	hasEmbedding := make([]bool, len(batches))
 	jobs := make([]func() error, 0, len(batches))
 	// The progress callback is supplied by the caller and is not required to be
 	// goroutine-safe; pool workers report out of order, so serialise it.
@@ -163,13 +195,23 @@ func Run(ctx context.Context, deps common.Deps, param common.Param, inputs commo
 	for i, batch := range batches {
 		i, batch := i, batch
 		jobs = append(jobs, func() error {
-			runtime.ReportProgressMessage(ctx, "Compiler", fmt.Sprintf(
-				"%s-template: extracting batch %d/%d", compileType, i+1, len(batches)))
 			packed, batchIDs := PackBatch(batch)
 			if len(batchIDs) == 0 {
 				mapDone()
 				return nil
 			}
+			extractionKey := fmt.Sprintf("extracted:%d", i)
+			var cached extractedBatch
+			if checkpoints.load(ctx, extractionKey, &cached) {
+				hasExtraction[i] = true
+				progressMu.Lock()
+				runtime.ReportProgressMessage(ctx, "Compiler", fmt.Sprintf("graph checkpoint: reused extraction batch %d/%d", i+1, len(batches)))
+				progressMu.Unlock()
+				mapDone()
+				return nil
+			}
+			runtime.ReportProgressMessage(ctx, "Compiler", fmt.Sprintf(
+				"%s-template: extracting batch %d/%d", compileType, i+1, len(batches)))
 			nodes, edges, err := extractHypergraph(ctx, deps, cfg, nodePrompt, edgePromptTmpl, packed)
 			if err != nil {
 				return err
@@ -181,6 +223,11 @@ func Run(ctx context.Context, deps common.Deps, param common.Param, inputs commo
 			// surviving payload. Relations are gated only when the template
 			// asked them to carry evidence.
 			textByID := batchTextByID(batch)
+			for id := range textByID {
+				if original, ok := oversizedSources[id]; ok {
+					textByID[id] = original
+				}
+			}
 			if len(textByID) > 0 {
 				nodes, _, _ = ValidatePayloadEvidence(nodes, textByID, gateMode)
 				if len(edges) > 0 && RelationExpectsEvidence(parserConfig) {
@@ -190,7 +237,15 @@ func Run(ctx context.Context, deps common.Deps, param common.Param, inputs commo
 			// Keep embedding out of the compiler-pool worker. buildRows calls
 			// Embed.Encode, which may submit its own batch jobs to that pool;
 			// the serial loop after runBatches owns it.
-			extracted[i] = extractedBatch{nodes: nodes, edges: edges, batchIDs: batchIDs}
+			result := extractedBatch{Nodes: nodes, Edges: edges, BatchIDs: batchIDs}
+			if checkpoints.store != nil {
+				if err := checkpoints.save(ctx, extractionKey, result); err != nil {
+					return err
+				}
+				hasExtraction[i] = true
+			} else {
+				extracted[i] = result
+			}
 			progressMu.Lock()
 			runtime.ReportProgressMessage(ctx, "Compiler", fmt.Sprintf(
 				"%s-template: batch %d/%d done: %d entities, %d relations",
@@ -212,14 +267,32 @@ func Run(ctx context.Context, deps common.Deps, param common.Param, inputs commo
 	// already occupied by the shared compiler pool.
 	rowCount := 0
 	for i, result := range extracted {
-		if len(result.batchIDs) == 0 {
-			continue
+		embeddingKey := fmt.Sprintf("embedded:%d", i)
+		var rows []common.Product
+		if checkpoints.load(ctx, embeddingKey, &rows) {
+			hasEmbedding[i] = true
+			runtime.ReportProgressMessage(ctx, "Compiler", fmt.Sprintf("graph checkpoint: reused embedding batch %d/%d", i+1, len(batches)))
+		} else {
+			if hasExtraction[i] && !checkpoints.load(ctx, fmt.Sprintf("extracted:%d", i), &result) {
+				return common.Outputs{}, fmt.Errorf("read graph extraction checkpoint for batch %d", i+1)
+			}
+			if len(result.BatchIDs) == 0 {
+				continue
+			}
+			rows, err = buildRows(ctx, deps, cfg, result.Nodes, result.Edges, result.BatchIDs)
+			if err != nil {
+				return common.Outputs{}, err
+			}
+			if checkpoints.store != nil {
+				if err := checkpoints.save(ctx, embeddingKey, rows); err != nil {
+					return common.Outputs{}, err
+				}
+				hasEmbedding[i] = true
+			} else {
+				perBatch[i] = rows
+			}
 		}
-		rows, err := buildRows(ctx, deps, cfg, result.nodes, result.edges, result.batchIDs)
-		if err != nil {
-			return common.Outputs{}, err
-		}
-		perBatch[i] = rows
+		extracted[i] = extractedBatch{}
 		rowCount += len(rows)
 		remainingWindow.Sub(0, 4).Report(ctx, float64(i+1)/float64(len(extracted)))
 		runtime.ReportProgressMessage(ctx, "Compiler", fmt.Sprintf(
@@ -232,17 +305,26 @@ func Run(ctx context.Context, deps common.Deps, param common.Param, inputs commo
 	// ---- DEDUP ----
 	// Sequential in batch order so merge outcomes are deterministic and match
 	// Python's _struct_local_dedup (which folds docs in list order).
-	decider := NewLLMMergeDecider(deps.Chat, llmID, deps.Embed, param.SimilarityThreshold)
+	dedupProgress := &dedupProgressReporter{chat: deps.Chat, total: rowCount}
+	decider := NewLLMMergeDecider(dedupProgress, llmID, deps.Embed, param.SimilarityThreshold)
+	decider.checkpoints = checkpoints
 	deduper := NewGroupedDeduper(decider)
 	dedupDone := remainingWindow.Sub(1, 4).Counter(ctx, rowCount)
-	for _, rows := range perBatch {
+	for i, rows := range perBatch {
+		if hasEmbedding[i] && !checkpoints.load(ctx, fmt.Sprintf("embedded:%d", i), &rows) {
+			return common.Outputs{}, fmt.Errorf("read graph embedding checkpoint for batch %d", i+1)
+		}
 		for _, row := range rows {
 			if err := deduper.Add(ctx, row); err != nil {
+				dedupProgress.report(ctx, true)
 				return common.Outputs{}, err
 			}
+			dedupProgress.processed++
+			dedupProgress.report(ctx, false)
 			dedupDone()
 		}
 	}
+	dedupProgress.report(ctx, true)
 	remainingWindow.Sub(1, 4).Report(ctx, 1)
 	if err := deduper.RewriteRelations(ctx, decider.Aliases(), deps.Embed); err != nil {
 		return common.Outputs{}, err
@@ -290,6 +372,9 @@ func Run(ctx context.Context, deps common.Deps, param common.Param, inputs commo
 	out := common.Outputs{
 		Products:          products,
 		DuplicatesDropped: stats.DuplicatesDropped,
+	}
+	if err := checkpoints.save(ctx, "compiled", out); err != nil {
+		return common.Outputs{}, err
 	}
 	return out, nil
 }

@@ -95,6 +95,7 @@ export const GlobalParamSheet = (props: IGlobalParamModalProps) => {
 
           <div className="px-5 pb-5">
             <BlockButton
+              data-creation-action
               onClick={() => {
                 setFields(GlobalFormFields(t));
                 setDefaultValues(GlobalVariableFormDefaultValues);

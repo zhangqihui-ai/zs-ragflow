@@ -877,6 +877,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
               {t('common.cancel')}
             </Button>
             <Button
+              data-creation-action
               onClick={handleOk}
               disabled={isUploadDisabled || uploading}
               loading={uploading}
@@ -1053,6 +1054,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
               {t('common.cancel')}
             </Button>
             <Button
+              data-creation-action
               onClick={handleGitImport}
               disabled={isGitImportDisabled}
               loading={gitImporting}

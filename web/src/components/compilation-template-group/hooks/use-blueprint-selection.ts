@@ -22,6 +22,7 @@ import {
 import { capitalize, lowerCase } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
 import { UseFormReturn, useWatch } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { FormSchemaType } from '../schema';
 
@@ -48,6 +49,7 @@ export function useBlueprintSelection({
   presets,
   builtins,
 }: UseBlueprintSelectionParams) {
+  const { t } = useTranslation();
   const [explicitValue, setExplicitValue] = useState<string>();
 
   const kindPath = `templates.${selectedTemplateIndex}.kind` as const;
@@ -88,12 +90,19 @@ export function useBlueprintSelection({
   const options = useMemo<SelectWithSearchFlagOptionType[]>(
     () => [
       ...presets.map((preset) => ({
-        label: capitalize(lowerCase(preset.id)),
+        label: t(`knowledgeCompilation.blueprintLabels.${preset.id}`, {
+          defaultValue: capitalize(lowerCase(preset.id)),
+        }),
         value: preset.id,
       })),
-      { label: 'Custom', value: CustomBlueprintValue },
+      {
+        label: t('knowledgeCompilation.blueprintLabels.custom', {
+          defaultValue: 'Custom',
+        }),
+        value: CustomBlueprintValue,
+      },
     ],
-    [presets],
+    [presets, t],
   );
 
   const handleSelect = useCallback(

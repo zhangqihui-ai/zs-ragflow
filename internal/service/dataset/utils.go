@@ -108,6 +108,9 @@ func datasetListItemToMap(latestByCanvas map[string]string, kb *entity.Knowledge
 	if kb.UpdateTime != nil {
 		item["update_time"] = *kb.UpdateTime
 	}
+	if kb.CreateTime != nil {
+		item["create_time"] = *kb.CreateTime
+	}
 	if kb.PipelineID != nil {
 		item["pipeline_id"] = *kb.PipelineID
 	}

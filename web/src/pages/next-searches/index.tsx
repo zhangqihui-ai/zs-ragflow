@@ -124,6 +124,7 @@ export default function SearchList() {
               filters={owners}
             >
               <Button
+                data-creation-action
                 data-testid="create-search"
                 onClick={() => openCreateModalFun()}
               >
@@ -188,6 +189,7 @@ export default function SearchList() {
       )}
       {openCreateModal && (
         <RenameDialog
+          isCreate={!initialSearchName}
           hideModal={hideSearchRenameModal}
           onOk={onSearchRenameConfirm}
           initialName={initialSearchName}

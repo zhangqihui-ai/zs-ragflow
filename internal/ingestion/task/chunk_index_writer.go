@@ -21,7 +21,9 @@ import (
 	"fmt"
 	"time"
 
+	"ragflow/internal/agent/runtime"
 	"ragflow/internal/common"
+	"ragflow/internal/ingestion/component/progress"
 
 	"go.uber.org/zap"
 )
@@ -35,7 +37,7 @@ const (
 type InsertFunc func(ctx context.Context, chunks []map[string]any, baseName, datasetID string) ([]string, error)
 
 // chunkIndexWriter batches chunks and writes them to the search engine in
-// bulkSize-sized batches. Progress is reported every 128 batches.
+// bulkSize-sized batches, reporting bounded progress through the run context.
 type chunkIndexWriter struct {
 	insertFunc      InsertFunc
 	finalInsertFunc InsertFunc
@@ -77,6 +79,8 @@ func (w *chunkIndexWriter) Write(ctx context.Context, chunks []map[string]any) e
 	if bulkSize <= 0 {
 		bulkSize = len(chunks)
 	}
+	details := progress.NewReporter(ctx, "Indexer", "Chunks written to search index")
+	details.Report(0, len(chunks))
 	for b := 0; b < len(chunks); b += bulkSize {
 		end := b + bulkSize
 		if end > len(chunks) {
@@ -103,6 +107,7 @@ func (w *chunkIndexWriter) Write(ctx context.Context, chunks []map[string]any) e
 			}
 
 			delay := chunkInsertRetryBaseDelay << (attempt - 1)
+			runtime.ReportProgressMessage(ctx, "Indexer", fmt.Sprintf("[WARN] Retrying search index batch %d-%d: attempt=%d/%d, error=%v", b+1, end, attempt+1, chunkInsertAttempts, err))
 			common.Warn("retrying chunk index write",
 				zap.Int("batch_start", b),
 				zap.Int("batch_end", end),
@@ -122,6 +127,7 @@ func (w *chunkIndexWriter) Write(ctx context.Context, chunks []map[string]any) e
 		if err != nil {
 			return fmt.Errorf("insert chunk batch %d-%d after %d attempts: %w", b, end, chunkInsertAttempts, err)
 		}
+		details.Report(end, len(chunks))
 	}
 	return nil
 }

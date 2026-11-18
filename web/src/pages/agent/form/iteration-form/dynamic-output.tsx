@@ -94,7 +94,10 @@ export function DynamicOutputForm({ node }: IProps) {
           </div>
         );
       })}
-      <BlockButton onClick={() => append({ name: '', ref: undefined })}>
+      <BlockButton
+        data-creation-action
+        onClick={() => append({ name: '', ref: undefined })}
+      >
         {t('common.add')}
       </BlockButton>
     </div>

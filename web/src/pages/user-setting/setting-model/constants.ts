@@ -14,6 +14,61 @@
  *  limitations under the License.
  */
 
+import { LLMFactory } from '@/constants/llm';
+
+export const ProviderGroups = [
+  {
+    id: 'domestic',
+    labelKey: 'setting.providerGroupDomestic',
+    names: [
+      LLMFactory.TongYiQianWen,
+      LLMFactory.ZhipuAI,
+      LLMFactory.Moonshot,
+      LLMFactory.DeepSeek,
+      LLMFactory.VolcEngine,
+      LLMFactory.MiniMax,
+      LLMFactory.TencentHunYuan,
+      LLMFactory.Xiaomi,
+    ],
+  },
+  {
+    id: 'foreign',
+    labelKey: 'setting.providerGroupForeign',
+    names: [
+      LLMFactory.OpenAI,
+      LLMFactory.Anthropic,
+      LLMFactory.Gemini,
+      LLMFactory.XAI,
+    ],
+  },
+  {
+    id: 'local',
+    labelKey: 'setting.providerGroupLocal',
+    names: [
+      LLMFactory.Ollama,
+      LLMFactory.VLLM,
+      LLMFactory.Xinference,
+      LLMFactory.GPUStack,
+    ],
+  },
+  {
+    id: 'document',
+    labelKey: 'setting.providerGroupDocument',
+    names: [
+      LLMFactory.MinerU,
+      LLMFactory.PaddleOCR,
+      LLMFactory.PaddleOCRLocal,
+      LLMFactory.OpenDataLoader,
+      LLMFactory.SoMark,
+    ],
+  },
+  {
+    id: 'custom',
+    labelKey: 'setting.providerGroupCustom',
+    names: [LLMFactory.OpenAiAPICompatible],
+  },
+] as const;
+
 export const BedrockRegionList = [
   'us-east-2',
   'us-east-1',

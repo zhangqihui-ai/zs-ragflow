@@ -22,6 +22,14 @@ export interface IDataset {
   created_by: string;
   description?: string;
   document_count: number;
+  parsing_summary?: {
+    total: number;
+    completed: number;
+    running: number;
+    failed: number;
+    pending: number;
+    status: 'empty' | 'running' | 'failed' | 'pending' | 'ready';
+  };
   embedding_model: string;
   embedding_model_name?: string;
   size?: number;

@@ -22,6 +22,8 @@ import (
 
 	"ragflow/internal/dao"
 	"ragflow/internal/permission"
+
+	"go.uber.org/zap"
 )
 
 // AgentVersionMetadata describes a saved version without its DSL.
@@ -33,9 +35,11 @@ type AgentVersionMetadata struct {
 
 // AgentVersionCatalogItem groups a canvas's saved version metadata.
 type AgentVersionCatalogItem struct {
-	ID       string                 `json:"id"`
-	Name     string                 `json:"name"`
-	Versions []AgentVersionMetadata `json:"versions"`
+	ID              string                 `json:"id"`
+	Name            string                 `json:"name"`
+	Avatar          *string                `json:"avatar,omitempty"`
+	CompilationKind string                 `json:"compilation_kind,omitempty"`
+	Versions        []AgentVersionMetadata `json:"versions"`
 }
 
 // ListVersionCatalog returns accessible canvases in the selected category and
@@ -55,6 +59,10 @@ func (s *AgentService) ListVersionCatalog(ctx context.Context, canvasCategory st
 	if err != nil {
 		return nil, fmt.Errorf("list version catalog canvases: %w", err)
 	}
+	kinds, err := pipelineCompilationKinds(ctx, canvases)
+	if err != nil {
+		zap.L().Warn("load catalog compilation kinds", zap.Error(err))
+	}
 	canvasIDs := make([]string, 0, len(canvases))
 	indexByID := make(map[string]int, len(canvases))
 	for _, canvas := range canvases {
@@ -62,6 +70,7 @@ func (s *AgentService) ListVersionCatalog(ctx context.Context, canvasCategory st
 		canvasIDs = append(canvasIDs, canvas.ID)
 		items = append(items, AgentVersionCatalogItem{
 			ID: canvas.ID, Name: derefString(canvas.Title),
+			Avatar: canvas.Avatar, CompilationKind: kinds[canvas.ID],
 			Versions: make([]AgentVersionMetadata, 0),
 		})
 	}

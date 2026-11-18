@@ -64,6 +64,33 @@ const ParseStatusStateMap = {
   [RunningStatus.SCHEDULE]: 'running',
 } as const;
 
+export function ParsingStatusBadge({ record }: { record: IDocumentInfo }) {
+  const { t } = useTranslation();
+  const status = getDocumentRunningStatus(record);
+  if (status !== RunningStatus.DONE && status !== RunningStatus.UNSTART) {
+    return null;
+  }
+  const completed = status === RunningStatus.DONE;
+
+  return (
+    <span
+      className={cn(
+        'inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium',
+        completed
+          ? 'bg-state-success/10 text-state-success'
+          : 'bg-nav-active-bg text-nav-active-text',
+      )}
+      data-testid="document-parsing-badge"
+    >
+      {t(
+        completed
+          ? 'knowledgeDetails.completed'
+          : 'knowledgeDetails.pendingParsing',
+      )}
+    </span>
+  );
+}
+
 export function ParseDropdownButton({
   record,
   showChangeParserModal,

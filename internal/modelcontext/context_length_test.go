@@ -363,27 +363,6 @@ func openModelContextTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 
-// TestResolveModelContentLength_StoredMistralOCRProvider reads the Mistral
-// catalog for models stored under the "Mistral OCR" provider name: through the
-// tenant row, through a composite reference without a row, and through the
-// driver fallback.
-func TestResolveModelContentLength_StoredMistralOCRProvider(t *testing.T) {
-	const want = 262144 // mistral-large-latest context_length in conf/models/mistral.json
-
-	if got := resolveTestContextLength(t.Context(), nil, "", "mistral-large-latest@default@Mistral OCR", "", ""); got != want {
-		t.Fatalf("composite without tenant row = %d, want %d", got, want)
-	}
-	if got := resolveTestContextLength(t.Context(), nil, "", "", "Mistral OCR", "mistral-large-latest"); got != want {
-		t.Fatalf("driver fallback = %d, want %d", got, want)
-	}
-
-	db := openModelContextTestDB(t)
-	seedChatModel(t, db, "provider-mistral-ocr", "Mistral OCR", "mistral-large-latest", "")
-	if got := resolveTestContextLength(t.Context(), db, "tenant-1", "0123456789abcdef0123456789abcdef", "", ""); got != want {
-		t.Fatalf("tenant model id = %d, want %d", got, want)
-	}
-}
-
 // TestResolveModelContentLength_LegacyCompositeNeverUsesNonDefaultInstance
 // verifies that a legacy two-part "model@provider" reference never resolves
 // another instance's tenant override. The reference implicitly means the

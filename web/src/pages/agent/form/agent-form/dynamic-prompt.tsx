@@ -82,6 +82,7 @@ const DynamicPrompt = () => {
       </div>
       <FormMessage />
       <BlockButton
+        data-creation-action
         onClick={() => append({ content: '', role: PromptRole.User })}
       >
         Add

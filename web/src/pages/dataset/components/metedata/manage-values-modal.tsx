@@ -283,6 +283,7 @@ export const ManageValuesModal = (props: IManageValuesProps) => {
                 metaData.valueType === metadataValueTypeEnum['list'] && (
                   <div>
                     <Button
+                      data-creation-action
                       variant="outline"
                       size="icon"
                       onClick={handleAddValue}

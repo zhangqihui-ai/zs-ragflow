@@ -53,7 +53,10 @@ const DynamicTool = () => {
         ))}
       </div>
       <FormMessage />
-      <BlockButton onClick={() => append({ component_name: '' })}>
+      <BlockButton
+        data-creation-action
+        onClick={() => append({ component_name: '' })}
+      >
         Add
       </BlockButton>
     </FormItem>

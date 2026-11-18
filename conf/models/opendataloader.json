@@ -1,0 +1,17 @@
+{
+  "name": "OpenDataLoader",
+  "url_suffix": {
+    "ocr": "file_parse"
+  },
+  "url_hint": "http://host.docker.internal:9383",
+  "class": "local",
+  "models": [
+    {
+      "name": "OpenDataLoader-model",
+      "max_tokens": 8192,
+      "model_types": [
+        "ocr"
+      ]
+    }
+  ]
+}

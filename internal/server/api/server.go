@@ -140,7 +140,7 @@ func startServer(ctx context.Context, serverName string, arguments *bootstrap.Se
 	// process runs ingestion runs (e.g. in a combined --api --ingestor deploy
 	// where the ingestor bindings do not apply).
 	task.InitEmbedderResolver(dao.DB)
-	task.InitKnowledgeCompilerDeps(dao.DB, engine.Get())
+	task.InitKnowledgeCompilerDeps(dao.DB, engine.Get(), nil)
 
 	// Initialize doc engine for skill search
 	docEngine := engine.Get()

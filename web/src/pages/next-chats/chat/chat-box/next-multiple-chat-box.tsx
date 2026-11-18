@@ -248,6 +248,7 @@ const ChatCard = forwardRef(function ChatCard(
             )}
             {isLatestChat && idx < 2 && (
               <Button
+                data-creation-action
                 variant="ghost"
                 size="icon-sm"
                 disabled={isAnyBoxLoading}

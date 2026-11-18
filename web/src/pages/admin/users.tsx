@@ -602,6 +602,7 @@ function AdminUserManagement() {
               </div>
 
               <Button
+                data-creation-action
                 className="h-10 px-4"
                 onClick={() => setCreateUserModalOpen(true)}
               >
@@ -812,6 +813,7 @@ function AdminUserManagement() {
             </Button>
 
             <Button
+              data-creation-action
               form={createUserForm.id}
               type="submit"
               className="px-4 h-10"

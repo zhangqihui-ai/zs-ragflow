@@ -206,7 +206,9 @@ const ParserForm = ({
         {!fixedFileFormats && remainingFileTypes.length > 0 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <BlockButton type="button">{t('flow.addFileType')}</BlockButton>
+              <BlockButton data-creation-action type="button">
+                {t('flow.addFileType')}
+              </BlockButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               {remainingFileTypes.map((fileType) => (

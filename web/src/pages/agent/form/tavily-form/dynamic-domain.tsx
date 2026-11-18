@@ -52,7 +52,7 @@ export const DynamicDomain = ({ name, label }: DynamicDomainProps) => {
         ))}
       </div>
       <FormMessage />
-      <BlockButton onClick={() => append({ value: '' })}>
+      <BlockButton data-creation-action onClick={() => append({ value: '' })}>
         {t('common.add')}
       </BlockButton>
     </FormItem>

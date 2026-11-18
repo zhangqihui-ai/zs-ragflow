@@ -111,7 +111,7 @@ export default function MemoryList() {
               onChange={handleFilterSubmit}
               value={filterValue}
             >
-              <Button onClick={() => openCreateModalFun()}>
+              <Button data-creation-action onClick={() => openCreateModalFun()}>
                 <Plus className="size-[1em]" />
                 {t('createMemory')}
               </Button>

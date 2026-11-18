@@ -35,10 +35,12 @@ export function RenameDialog({
   loading,
   title,
   forbidSlash,
+  isCreate = false,
 }: IModalProps<any> & {
   initialName?: string;
   title?: ReactNode;
   forbidSlash?: boolean;
+  isCreate?: boolean;
 }) {
   const { t } = useTranslation();
 
@@ -60,6 +62,7 @@ export function RenameDialog({
         ></RenameForm>
         <DialogFooter>
           <ButtonLoading
+            data-creation-action={isCreate}
             data-testid="rename-save"
             type="submit"
             form={TagRenameId}

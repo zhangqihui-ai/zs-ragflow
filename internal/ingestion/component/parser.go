@@ -80,6 +80,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"go.uber.org/zap"
@@ -459,6 +460,8 @@ func (c *ParserComponent) Outputs() map[string]string {
 // per page and assembles the results in page order), so this
 // component does no goroutine fan-out of its own.
 func (c *ParserComponent) Invoke(ctx context.Context, db *gorm.DB, inputs map[string]any) (map[string]any, error) {
+	startedAt := time.Now()
+	runtime.ReportProgressMessage(ctx, "Parser", "Reading source file")
 	// 1. Decode the binary input.
 	binary, err := readParserBinary(ctx, db, inputs)
 	if err != nil {
@@ -498,6 +501,13 @@ func (c *ParserComponent) Invoke(ctx context.Context, db *gorm.DB, inputs map[st
 	//
 	requestedType := fileTypeFromInputs(inputs)
 	fileParser, fileTypeExt, selectionErr := parser.GetParser(requestedType, binary)
+	method := "auto"
+	if setup, ok := setups[resolveParserFamily(fileTypeExt)]; ok {
+		if configured, ok := setup["parse_method"].(string); ok && configured != "" {
+			method = configured
+		}
+	}
+	runtime.ReportProgressMessage(ctx, "Parser", fmt.Sprintf("Parsing source: format=%s, bytes=%d, method=%s, vision_enhancement=%t", fileTypeExt, len(binary), method, c.enableVisionEnhancement))
 	if selectionErr == nil && fileTypeExt != requestedType {
 		warning := fmt.Sprintf("file %q: requested format %s does not match detected format %s; continuing with the %s parser", filename, requestedType, fileTypeExt, fileTypeExt)
 		common.Warn(warning)
@@ -555,12 +565,15 @@ func (c *ParserComponent) Invoke(ctx context.Context, db *gorm.DB, inputs map[st
 		return nil, dispatched.Err
 	}
 	if enhanceOn && !handledMedia && !handledImage && !handledAudio && dispatched.Err == nil && ctx.Err() == nil {
+		runtime.ReportProgressMessage(ctx, "Parser", "Checking vision enhancement")
 		// PDF dispatch and ordinary parsers share enhancement after normalization.
 		var enhanceErr error
-		dispatched, _, enhanceErr = maybeDispatchVisionEnhancement(ctx, db, fileTypeExt, dispatched, inputs, c.vision, visionWin)
+		var enhanced bool
+		dispatched, enhanced, enhanceErr = maybeDispatchVisionEnhancement(ctx, db, fileTypeExt, dispatched, inputs, c.vision, visionWin)
 		if enhanceErr != nil {
 			return nil, enhanceErr
 		}
+		runtime.ReportProgressMessage(ctx, "Parser", fmt.Sprintf("Vision enhancement finished: applied=%t", enhanced))
 	} else {
 		// Enhancement skipped entirely (disabled or non-PDF media handled):
 		// still strip the transient backend-description marker so it never
@@ -613,6 +626,11 @@ func (c *ParserComponent) Invoke(ctx context.Context, db *gorm.DB, inputs map[st
 	globals.PublishGlobals(ctx, out)
 	items, _ := out["json"].([]parser.DocItem)
 	logParserOutput(dispatched, items)
+	pageSummary := ""
+	if pages := parserPageCount(dispatched.File); pages > 0 {
+		pageSummary = fmt.Sprintf("pages=%d, ", pages)
+	}
+	runtime.ReportProgressMessage(ctx, "Parser", fmt.Sprintf("Parsing finished: %sitems=%d, elapsed=%s", pageSummary, len(items), time.Since(startedAt).Round(time.Millisecond)))
 	// Progress (_created_time / _elapsed_time stamping, start/done
 	// callbacks) is owned by the canvas framework (realComponentBody),
 	// not by this component, so we return the work result directly.

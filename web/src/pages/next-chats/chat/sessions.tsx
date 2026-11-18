@@ -268,6 +268,7 @@ export function Sessions({ handleConversationCardClick }: SessionProps) {
           ) : (
             // New conversation
             <Button
+              data-creation-action
               variant="ghost"
               size="icon-xs"
               onClick={addTemporaryConversation}

@@ -54,6 +54,7 @@ import {
 } from '@/utils/chat';
 import {
   citationWholeMarkerReg,
+  replaceDocumentIdCitations,
   type CitationKey,
 } from '@/utils/citation-utils';
 import { getDirAttribute } from '@/utils/text-direction';
@@ -224,7 +225,9 @@ function MarkdownContent({
   const contentWithCursor = useMemo(() => {
     // Escape standalone < and > outside matched <...> tags
     // so DOMPurify doesn't strip them as HTML.
-    const safeContent = escapeUnmatchedAngleBrackets(content);
+    const safeContent = escapeUnmatchedAngleBrackets(
+      replaceDocumentIdCitations(content, reference?.chunks),
+    );
 
     let text = DOMPurify.sanitize(safeContent, {
       ADD_TAGS: ['think', 'section', 'details', 'summary', 'retrieving'],
@@ -247,7 +250,7 @@ function MarkdownContent({
         escapeUnmatchedAngleBrackets,
       )(nextText),
     );
-  }, [content, loading, t]);
+  }, [content, loading, reference?.chunks, t]);
 
   // Scope the display numbering to the whole message: each text node only
   // sees its own markers, so a per-node map restarts at 0 every time and

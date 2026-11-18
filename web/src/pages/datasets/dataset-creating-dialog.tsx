@@ -29,6 +29,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { EmbeddingModelItem } from '../dataset/setting/common-item';
+import styles from './dataset-creating-dialog.module.css';
 
 const FormId = 'dataset-creating-form';
 
@@ -153,6 +154,7 @@ export function InputForm({ onOk }: IModalProps<any>) {
           name={parseType === ParseType.BuiltIn ? 'parser_id' : 'pipeline_id'}
           render={() => (
             <FormItem>
+              <FormLabel>{t('knowledgeList.cardParser')}</FormLabel>
               <ParserTreeSelect
                 value={buildParserSelectValue({
                   parseType,
@@ -181,7 +183,8 @@ export function DatasetCreatingDialog({
   return (
     <Dialog open onOpenChange={hideModal}>
       <DialogContent
-        className="sm:max-w-[425px] focus-visible:!outline-none flex flex-col"
+        className={`${styles.dialog} max-w-[calc(100vw-2rem)] sm:max-w-[425px] focus-visible:!outline-none flex flex-col rounded-2xl sm:rounded-2xl`}
+        data-testid="dataset-creating-dialog"
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
             e.preventDefault();
@@ -190,13 +193,23 @@ export function DatasetCreatingDialog({
           }
         }}
       >
-        <DialogHeader>
-          <DialogTitle>{t('knowledgeList.createKnowledgeBase')}</DialogTitle>
+        <DialogHeader className="rounded-t-2xl bg-nav-active-bg/40 border-nav-active-text/15">
+          <DialogTitle className={styles.title}>
+            {t('knowledgeList.createKnowledgeBase')}
+          </DialogTitle>
         </DialogHeader>
-        <DialogDescription></DialogDescription>
+        <DialogDescription className="sr-only">
+          {t('knowledgeList.createKnowledgeBase')}
+        </DialogDescription>
         <InputForm onOk={onOk}></InputForm>
-        <DialogFooter>
-          <ButtonLoading type="submit" form={FormId} loading={loading}>
+        <DialogFooter className="border-t border-nav-active-text/15 pt-4">
+          <ButtonLoading
+            data-creation-action
+            type="submit"
+            form={FormId}
+            loading={loading}
+            className="min-w-[120px] rounded-md focus-visible:ring-2 focus-visible:ring-nav-active-text focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base"
+          >
             {t('common.save')}
           </ButtonLoading>
         </DialogFooter>

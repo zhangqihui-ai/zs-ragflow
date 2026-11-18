@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="100 78 698 320">
+  <defs>
+    <linearGradient id="zs-blue" x1="0" y1="0" x2="1" y2=".7">
+      <stop stop-color="#00d9ef"/>
+      <stop offset=".6" stop-color="#0069f7"/>
+      <stop offset="1" stop-color="#1427ee"/>
+    </linearGradient>
+  </defs>
+  <path fill="#0668f4" d="M103 395l66-134h47l22 85 74-249h394a55 55 0 0 0 0 57H346l-70 241h-67l-22-75-39 75z"/>
+  <path fill="url(#zs-blue)" d="M349 202h136c31 0 41 33 13 56l-119 89h98a43 43 0 0 0 78 0h93v-34h-82c-28 0-44-20-36-44l8-24c9-27 29-44 57-44h98v39h-99c-14 0-22 6-25 17-4 12 2 16 17 16h107v116H339v-63l109-75c8-6 8-10-2-10h-97z"/>
+  <circle cx="748" cy="126" r="45" fill="#f90812"/>
+  <path fill="#fff" d="M733 143c-4 5-16 3-14-3l10-31 14-4-9 25c9-15 17-26 29-26 6 0 10 4 8 10l-8 21c-3 8 5 10 16 2l1 2c-10 8-26 10-31 3-3-4-1-9 1-14l7-17c1-4-3-4-8 1-8 8-14 20-16 31z"/>
+</svg>

@@ -1,0 +1,13 @@
+---
+description: Persistent RAGFlow / ZS-RAG development and visual requirements
+alwaysApply: true
+---
+
+Read and follow the repository-root `AGENTS.md` before any work. It is the authoritative project guide and persistent record of user requirements. For frontend work, also follow `web/AGENTS.md`.
+
+The two highest-priority repository requirements apply to every task:
+
+- Use `docker-compose-dev.yml` for development, with mounted source and hot reload for the Vite frontend and Go backend. Start from the repository root with `docker compose -f docker-compose-dev.yml up --build -d`; preparation is documented in `docker/dev/README.md`.
+- Preserve the blue-and-white UI, consistent project fonts and backgrounds, and shared component styling. Use existing semantic tokens and do not replace the primary color scheme.
+
+Follow all remaining architecture, build, test, and validation instructions in `AGENTS.md`.

@@ -219,7 +219,7 @@ export function MetadataFilterConditions({
         <FormLabel>{t('chat.conditions')}</FormLabel>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant={'ghost'} type="button">
+            <Button data-creation-action variant={'ghost'} type="button">
               <Plus />
             </Button>
           </DropdownMenuTrigger>

@@ -208,6 +208,7 @@ function ConditionCards({
       })}
       <div className="pr-9">
         <BlockButton
+          data-creation-action
           className="mt-6"
           onClick={() => append({ operator: switchOperatorOptions[0].value })}
         >
@@ -345,6 +346,7 @@ function SwitchForm({ node }: IOperatorForm) {
           );
         })}
         <BlockButton
+          data-creation-action
           onClick={() =>
             append({
               logical_operator: SwitchLogicOperator.And,

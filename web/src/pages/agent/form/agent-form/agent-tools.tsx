@@ -170,7 +170,7 @@ export function AgentTools() {
         ))}
       </ul>
       <ToolPopover>
-        <BlockButton>{t('flow.addTools')}</BlockButton>
+        <BlockButton data-creation-action>{t('flow.addTools')}</BlockButton>
       </ToolPopover>
     </section>
   );
@@ -215,6 +215,7 @@ export function Agents({ node }: INextOperatorForm) {
         })}
       </ul>
       <BlockButton
+        data-creation-action
         onClick={addCanvasNode(Operator.Agent, {
           nodeId: node?.id,
           position: Position.Bottom,

@@ -137,7 +137,12 @@ function InvokeForm({ node }: INextOperatorForm) {
         <Collapse
           title={<div>{t('flow.parameter')}</div>}
           rightContent={
-            <Button variant={'ghost'} type="button" onClick={handleAddVariable}>
+            <Button
+              data-creation-action
+              variant={'ghost'}
+              type="button"
+              onClick={handleAddVariable}
+            >
               <Plus />
             </Button>
           }

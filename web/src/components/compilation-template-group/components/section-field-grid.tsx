@@ -20,6 +20,7 @@ import { Plus } from 'lucide-react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
+import { formatBuiltinFieldText } from '../builtin-field-label';
 import { SectionCardFieldMap } from '../constant';
 import { FieldCard } from './field-card';
 
@@ -36,7 +37,7 @@ export function SectionFieldGrid({
   onOpenAddField,
   onEditField,
 }: SectionFieldGridProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const form = useFormContext();
   const { fields, remove } = useFieldArray({
     control: form.control,
@@ -58,10 +59,14 @@ export function SectionFieldGrid({
           <FieldCard
             key={field.id}
             index={index}
-            title={cardFields ? fieldValue[cardFields.title] : undefined}
-            description={
-              cardFields ? fieldValue[cardFields.description] : undefined
-            }
+            title={formatBuiltinFieldText(
+              cardFields ? fieldValue[cardFields.title] : undefined,
+              i18n.language,
+            )}
+            description={formatBuiltinFieldText(
+              cardFields ? fieldValue[cardFields.description] : undefined,
+              i18n.language,
+            )}
             onEdit={onEditField}
             onDelete={remove}
           />

@@ -246,6 +246,20 @@ Docker 部署使用 `docker/.env` 和 `docker/docker-compose.yml`。镜像、端
 
 ### 🔨 以源代码启动
 
+#### 🐳 Docker 开发模式
+
+将编译和服务运行放在容器中，挂载本机源码及下载的依赖，保存代码后自动更新：
+
+```bash
+bash docker/dev/prepare.sh
+docker compose -f docker-compose-dev.yml up --build
+```
+
+宿主机需要安装 `uv` 和 Git。准备脚本下载 Linux 原生静态库、模型、分词器、字体和
+分词字典；开发容器提供 Go/C++ 编译工具，并启动 MySQL、Elasticsearch、MinIO、
+Kvrocks 和 NATS。前后端就绪后访问 [http://localhost:9222](http://localhost:9222)。
+已有依赖可复用，架构选择和挂载路径见 [Docker 开发指南](docker/dev/README.md)。
+
 #### 📝 源码启动前提条件
 
 1. 克隆仓库，并安装 `go.mod` 中指定版本的 Go 编译器（当前为 Go 1.27）、Clang 20、LLD 20、CMake ≥ 4.0、PCRE2 开发文件 CGO 依赖的静态库；[build.sh](./build.sh) 会设置所需的构建参数。

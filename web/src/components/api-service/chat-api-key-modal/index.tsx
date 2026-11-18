@@ -89,6 +89,7 @@ const ChatApiKeyModal = ({
               </Table>
             )}
             <Button
+              data-creation-action
               className="w-fit shrink-0"
               onClick={createToken}
               loading={creatingLoading}

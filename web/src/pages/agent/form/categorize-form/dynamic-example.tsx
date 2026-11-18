@@ -47,6 +47,7 @@ const DynamicExample = ({ name }: DynamicExampleProps) => {
               />
               {index === 0 ? (
                 <Button
+                  data-creation-action
                   type="button"
                   variant={'ghost'}
                   onClick={() => append({ value: '' })}

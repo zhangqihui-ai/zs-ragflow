@@ -185,12 +185,14 @@ func (dao *UserCanvasDAO) GetList(ctx context.Context, db *gorm.DB, tenantID str
 }
 
 // ListMetadataByIDs loads only the fields needed by the version catalog.
-func (dao *UserCanvasDAO) ListMetadataByIDs(ctx context.Context, db *gorm.DB, canvasIDs []string, category string) ([]entity.UserCanvas, error) {
+func (dao *UserCanvasDAO) ListMetadataByIDs(ctx context.Context, db *gorm.DB, canvasIDs []string, category string) ([]*UserCanvasListItem, error) {
 	if len(canvasIDs) == 0 {
-		return []entity.UserCanvas{}, nil
+		return nil, nil
 	}
-	var canvases []entity.UserCanvas
-	err := db.WithContext(ctx).Select("id", "title").
+	var canvases []*UserCanvasListItem
+	err := db.WithContext(ctx).Model(&entity.UserCanvas{}).
+		Select(`id, title, avatar, COALESCE(NULLIF(tenant_id, ''), user_id) AS tenant_id,
+			CASE WHEN canvas_category = 'dataflow_canvas' THEN dsl END AS pipeline_dsl`).
 		Where("id IN ? AND canvas_category = ?", canvasIDs, category).
 		Order("create_time DESC").Order("id ASC").Find(&canvases).Error
 	return canvases, err
@@ -209,6 +211,7 @@ type UserCanvasListItem struct {
 	TenantAvatar       *string `gorm:"column:tenant_avatar"`
 	CanvasType         *string `gorm:"column:canvas_type"`
 	CanvasCategory     string  `gorm:"column:canvas_category"`
+	PipelineDSL        *string `gorm:"column:pipeline_dsl"`
 	OperatorPermission int32   `gorm:"-"`
 	Tags               string  `gorm:"column:tags"`
 	CreateTime         *int64  `gorm:"column:create_time"`
@@ -233,6 +236,7 @@ func (dao *UserCanvasDAO) ListByIDs(ctx context.Context, db *gorm.DB, canvasIDs,
 		user.avatar AS tenant_avatar,
 		user_canvas.canvas_type,
 		user_canvas.canvas_category,
+		CASE WHEN user_canvas.canvas_category = 'dataflow_canvas' THEN user_canvas.dsl END AS pipeline_dsl,
 		user_canvas.tags,
 		user_canvas.create_time,
 		user_canvas.update_time`).

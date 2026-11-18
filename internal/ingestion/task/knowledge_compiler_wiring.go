@@ -61,8 +61,9 @@ import (
 // compiler and the Deps resolver fail loud; a nil DB makes the resolver panic on
 // a missing Infinity chunk table, which the runner surfaces as a failed compile.
 var kcWiringDeps struct {
-	DB     *gorm.DB
-	Engine engine.DocEngine
+	DB          *gorm.DB
+	Engine      engine.DocEngine
+	Checkpoints kc.CheckpointStore
 }
 
 // InitKnowledgeCompilerDeps binds the relational handle and document engine used
@@ -71,9 +72,10 @@ var kcWiringDeps struct {
 // point passes the process-wide db and engine here instead of the wiring reading
 // kcWiringDeps.DB / kcWiringDeps.Engine directly. Call it once during server startup, before any
 // ingestion run.
-func InitKnowledgeCompilerDeps(db *gorm.DB, eng engine.DocEngine) {
+func InitKnowledgeCompilerDeps(db *gorm.DB, eng engine.DocEngine, checkpoints kc.CheckpointStore) {
 	kcWiringDeps.DB = db
 	kcWiringDeps.Engine = eng
+	kcWiringDeps.Checkpoints = checkpoints
 }
 
 func init() {
@@ -597,6 +599,22 @@ func newKnowledgeCompilerDepsResolver() kc.DepsResolver {
 		}
 
 		embedder := &kcEmbedder{factory: modelFactory, tenantID: tenantID, embdID: embeddingModel}
+		var graphModelIdentity string
+		if kcWiringDeps.Checkpoints != nil && modelInfo != nil && contextLengthErr == nil {
+			tenantCtx := permission.WithTenantID(modelCtx, tenantID)
+			var embeddingInfo *models.ModelInfo
+			var err error
+			if embeddingModel == "" {
+				embeddingInfo, err = modelFactory.ResolveDefaultInfo(tenantCtx, entity.ModelTypeEmbedding)
+			} else {
+				embeddingInfo, err = modelFactory.ResolveInfo(tenantCtx, entity.ModelTypeEmbedding, embeddingModel)
+			}
+			if err == nil && embeddingInfo != nil {
+				graphModelIdentity = fmt.Sprintf("%q/%q/%q/%q/%q/%q",
+					modelInfo.ID, modelInfo.InstanceID, modelInfo.Name,
+					embeddingInfo.ID, embeddingInfo.InstanceID, embeddingInfo.Name)
+			}
+		}
 		mapStore := knowledge_compile.NewWikiMapVersionStoreWithVectorSizeResolver(kcWiringDeps.DB, kcWiringDeps.Engine, func(ctx context.Context) (int, error) {
 			return embedderVectorSize(ctx, embedder)
 		})
@@ -609,8 +627,10 @@ func newKnowledgeCompilerDepsResolver() kc.DepsResolver {
 			// HistoricalKNN / Redis are optional (wiki historical dedup,
 			// datasetnav lock). They are wired separately when the
 			// surrounding pipeline supplies the backing services.
-			ModelContextLen: llmMax,
-			ModelMaxOutput:  llmMaxOutput,
+			ModelContextLen:    llmMax,
+			ModelMaxOutput:     llmMaxOutput,
+			GraphCheckpoints:   kcWiringDeps.Checkpoints,
+			GraphModelIdentity: graphModelIdentity,
 		}, nil
 	}
 }

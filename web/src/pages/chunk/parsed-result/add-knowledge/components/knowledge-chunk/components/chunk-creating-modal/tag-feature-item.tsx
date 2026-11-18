@@ -155,6 +155,7 @@ export const TagFeatureItem = () => {
               );
             })}
             <Button
+              data-creation-action
               variant="dashed"
               className="w-full flex items-center justify-center gap-2"
               onClick={() => append({ tag: '', frequency: 1 })}

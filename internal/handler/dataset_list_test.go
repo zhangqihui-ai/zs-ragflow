@@ -36,7 +36,7 @@ func setupListDatasetsTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("failed to open sqlite: %v", err)
 	}
 
-	if err := db.AutoMigrate(&entity.Knowledgebase{}, &entity.User{}, &entity.UserTenant{}, &entity.Tenant{}); err != nil {
+	if err := db.AutoMigrate(&entity.Knowledgebase{}, &entity.User{}, &entity.UserTenant{}, &entity.Tenant{}, &entity.Document{}, &entity.IngestionTask{}); err != nil {
 		t.Fatalf("failed to migrate test schema: %v", err)
 	}
 

@@ -362,7 +362,11 @@ export const AddCustomModelDialog = ({
               >
                 {cancelText ?? t('cancel')}
               </Button>
-              <Button type="submit" disabled={loading}>
+              <Button
+                data-creation-action={!defaultValues}
+                type="submit"
+                disabled={loading}
+              >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {submitText ?? commonT('confirm')}
               </Button>

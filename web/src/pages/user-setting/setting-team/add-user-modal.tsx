@@ -67,6 +67,7 @@ const AddingUserModal = ({
       onOk={form.handleSubmit(handleOk)}
       confirmLoading={loading}
       okText={t('common.ok')}
+      okButtonClassName="creation-action"
       cancelText={t('common.cancel')}
     >
       <Form {...form}>

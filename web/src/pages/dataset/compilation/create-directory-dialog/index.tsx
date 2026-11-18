@@ -39,6 +39,7 @@ export function CreateDirectoryDialog({
       open={open}
       onOpenChange={handleOpenChange}
       title={t('knowledgeCompilation.createDirectoryFolder')}
+      okButtonClassName="creation-action"
       onOk={handleOk}
       onCancel={onCancel}
       confirmLoading={loading}

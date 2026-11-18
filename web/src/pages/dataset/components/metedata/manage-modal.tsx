@@ -336,6 +336,7 @@ export const ManageMetadataModal = (props: IManageModalProps) => {
                     metadataType === MetadataType.SingleFileSetting
                   ) && (
                     <Button
+                      data-creation-action
                       variant={'ghost'}
                       className="border border-border-button"
                       type="button"
@@ -387,6 +388,7 @@ export const ManageMetadataModal = (props: IManageModalProps) => {
                     )} */}
                     {isCanAdd && activeTab !== 'built-in' && (
                       <Button
+                        data-creation-action
                         variant="outline"
                         type="button"
                         onClick={handAddValueRow}

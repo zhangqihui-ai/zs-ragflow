@@ -103,10 +103,11 @@ func (d CosineDecider) Decide(_ context.Context, _, _ common.Product, bestScore 
 // unioned, id preserved). Entity merges record aliases so relation endpoints
 // can be rewritten afterwards (mirrors _struct_local_dedup's entity_aliases).
 type LLMMergeDecider struct {
-	Chat      common.ChatInvoker
-	LLMID     string
-	Embed     common.Embedder
-	Threshold float64
+	Chat        common.ChatInvoker
+	LLMID       string
+	Embed       common.Embedder
+	Threshold   float64
+	checkpoints graphCheckpoints
 
 	// maxBatchTotal caps the estimated combined size (prompt input + JSON reply)
 	// of a single DecideBatch sub-call. It guards the model's context window
@@ -195,7 +196,7 @@ func (d *LLMMergeDecider) Decide(ctx context.Context, existing, incoming common.
 	if bestScore < d.Threshold {
 		return DecisionKeepBoth, common.Product{}, nil
 	}
-	merged, err := mergePair(ctx, d.Chat, d.LLMID, existing.Content, incoming.Content)
+	merged, err := d.checkpoints.mergePair(ctx, d.Chat, d.LLMID, existing.Content, incoming.Content)
 	if err != nil {
 		return DecisionKeepBoth, common.Product{}, err
 	}
@@ -468,10 +469,11 @@ func mergePairsBatch(ctx context.Context, chat common.ChatInvoker, llmID string,
 		b.WriteString(fmt.Sprintf("Pair %d:\nItem A (existing):\n%s\n\nItem B (incoming):\n%s\n\n", p.Index, p.Existing, p.Incoming))
 	}
 	res, err := common.GenJSON(ctx, chat, common.ChatRequest{
-		LLMID:        llmID,
-		SystemPrompt: mergeSystemPrompt + "\n\n" + batchMergeDecisionInstruction,
-		UserPrompt:   b.String(),
-		Temperature:  &mergeJudgeTemperature,
+		LLMID:           llmID,
+		SystemPrompt:    mergeSystemPrompt + "\n\n" + batchMergeDecisionInstruction,
+		UserPrompt:      b.String(),
+		Temperature:     &mergeJudgeTemperature,
+		DisableThinking: true,
 	})
 	if err != nil {
 		return nil, err
@@ -539,10 +541,11 @@ func mergePair(ctx context.Context, chat common.ChatInvoker, llmID, existingCont
 		return nil, nil
 	}
 	res, err := common.GenJSON(ctx, chat, common.ChatRequest{
-		LLMID:        llmID,
-		SystemPrompt: mergeSystemPrompt + "\n\n" + mergeDecisionInstruction,
-		UserPrompt:   fmt.Sprintf(mergeUserPrompt, payloadJSON(existingPayload), payloadJSON(incomingPayload)),
-		Temperature:  &mergeJudgeTemperature,
+		LLMID:           llmID,
+		SystemPrompt:    mergeSystemPrompt + "\n\n" + mergeDecisionInstruction,
+		UserPrompt:      fmt.Sprintf(mergeUserPrompt, payloadJSON(existingPayload), payloadJSON(incomingPayload)),
+		Temperature:     &mergeJudgeTemperature,
+		DisableThinking: true,
 	})
 	if err != nil {
 		return nil, err

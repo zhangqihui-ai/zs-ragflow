@@ -209,7 +209,11 @@ const TokenChunkerForm = ({
                 )}
               />
             </section>
-            <BlockButton type="button" onClick={() => append({ value: '\n' })}>
+            <BlockButton
+              data-creation-action
+              type="button"
+              onClick={() => append({ value: '\n' })}
+            >
               {t('common.add')}
             </BlockButton>
           </>
@@ -271,6 +275,7 @@ const TokenChunkerForm = ({
                 ))}
 
                 <BlockButton
+                  data-creation-action
                   type="button"
                   onClick={() => childrenDelimiters.append({ value: '\n' })}
                 >

@@ -2449,6 +2449,73 @@ func TestUpdateAgentWithoutReleaseKeepsCanvasUnreleased(t *testing.T) {
 	}
 }
 
+func TestListAgentsIncludesPipelineCompilationKind(t *testing.T) {
+	setupAgentSessionServiceTest(t)
+	const owner = "user-1"
+	if err := dao.DB.Create(&entity.User{ID: owner, Email: "owner@test.com"}).Error; err != nil {
+		t.Fatal(err)
+	}
+	group := entity.CompilationTemplateGroup{ID: "wiki-group", TenantID: owner, Name: "Wiki", Scope: "dataset"}
+	if err := dao.DB.Create(&group).Error; err != nil {
+		t.Fatal(err)
+	}
+	templates := []entity.CompilationTemplate{
+		{ID: "wiki", TenantID: sptr(owner), GroupID: &group.ID, Name: "Wiki", Kind: "wiki", Config: entity.JSONMap{}},
+		{ID: "graph", TenantID: sptr(owner), Name: "Graph", Kind: "knowledge_graph", Config: entity.JSONMap{}},
+		{ID: "foreign", TenantID: sptr("another-tenant"), Name: "Tree", Kind: "tree", Config: entity.JSONMap{}},
+	}
+	if err := dao.DB.Create(&templates).Error; err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct{ id, field, value string }{
+		{"group", "compilation_template_group_id", group.ID},
+		{"legacy", "compilation_template_id", "graph"},
+		{"foreign", "compilation_template_id", "foreign"},
+		{"unbound", "compilation_template_group_id", ""},
+	} {
+		canvas := entity.UserCanvas{
+			ID: tc.id, UserID: owner, Title: sptr(tc.id), CanvasCategory: "dataflow_canvas",
+			DSL: entity.JSONMap{"components": map[string]any{"Compiler:1": map[string]any{
+				"obj": map[string]any{"component_name": "Compiler", "params": map[string]any{tc.field: tc.value}},
+			}}},
+		}
+		if err := dao.DB.Create(&canvas).Error; err != nil {
+			t.Fatal(err)
+		}
+	}
+	ctx := serviceTestContext(t, owner, owner)
+	svc := NewAgentService()
+	resp, code, err := svc.ListAgents(ctx, "", 1, 30, nil, nil, "dataflow_canvas", "", nil)
+	if err != nil || code != common.CodeSuccess {
+		t.Fatalf("ListAgents failed: code=%v err=%v", code, err)
+	}
+	want := map[string]string{"group": "wiki", "legacy": "knowledge_graph", "foreign": "", "unbound": ""}
+	if len(resp.Canvas) != len(want) {
+		t.Fatalf("ListAgents returned %d canvases, want %d", len(resp.Canvas), len(want))
+	}
+	for _, raw := range resp.Canvas {
+		var item AgentItem
+		if err := json.Unmarshal(raw, &item); err != nil {
+			t.Fatal(err)
+		}
+		if kind, ok := want[item.ID]; !ok || item.CompilationKind != kind {
+			t.Errorf("canvas %s compilation kind = %q, want %q", item.ID, item.CompilationKind, kind)
+		}
+	}
+	catalog, err := svc.ListVersionCatalog(ctx, "dataflow_canvas")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(catalog) != len(want) {
+		t.Fatalf("version catalog returned %d canvases, want %d", len(catalog), len(want))
+	}
+	for _, item := range catalog {
+		if kind, ok := want[item.ID]; !ok || item.CompilationKind != kind {
+			t.Errorf("catalog canvas %s compilation kind = %q, want %q", item.ID, item.CompilationKind, kind)
+		}
+	}
+}
+
 func TestListAgentsIncludesReleaseTime(t *testing.T) {
 	setupAgentSessionServiceTest(t)
 

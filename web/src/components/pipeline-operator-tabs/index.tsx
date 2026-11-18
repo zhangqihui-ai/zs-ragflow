@@ -26,6 +26,7 @@ type PipelineOperatorTabsProps = {
   activeTab: string;
   onTabChange: (tab: string) => void;
   onOperatorValuesChange: (operatorId: string, values: any) => void;
+  tabLabels?: Record<string, string>;
   // Current values of the outer form's parser_config, keyed by operatorId.
   // The outer form is the single source of truth: Radix unmounts inactive
   // tabs, so a remounted operator form must initialize from these values —
@@ -45,6 +46,7 @@ const PipelineOperatorTabs = ({
   activeTab,
   onTabChange,
   onOperatorValuesChange,
+  tabLabels,
   operatorValues,
   operatorFormErrors,
   fixedFileFormats,
@@ -94,9 +96,10 @@ const PipelineOperatorTabs = ({
       <TabsList className="w-full justify-start">
         {mergedNodes.map((node, index) => {
           const tabValue = getTabValue(node, index);
+          const label = node.data?.name || node.data?.label || tabValue;
           return (
             <TabsTrigger key={tabValue} value={tabValue}>
-              {node.data?.name || node.data?.label || tabValue}
+              {tabLabels?.[label] ?? label}
             </TabsTrigger>
           );
         })}

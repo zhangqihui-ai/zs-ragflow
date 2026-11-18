@@ -612,3 +612,68 @@ func (dao *DocumentDAO) NameExistsInKB(ctx context.Context, db *gorm.DB, kbID, n
 		Count(&count).Error
 	return count > 0, err
 }
+
+// DatasetParsingSummary aggregates the authoritative document ingestion states.
+type DatasetParsingSummary struct {
+	Total     int64  `json:"total"`
+	Completed int64  `json:"completed"`
+	Running   int64  `json:"running"`
+	Failed    int64  `json:"failed"`
+	Pending   int64  `json:"pending"`
+	Status    string `json:"status"`
+}
+
+// ParsingSummaries reads all datasets on the visible page in one grouped query.
+func (d *DocumentDAO) ParsingSummaries(ctx context.Context, db *gorm.DB, datasetIDs []string) (map[string]DatasetParsingSummary, error) {
+	result := make(map[string]DatasetParsingSummary, len(datasetIDs))
+	if len(datasetIDs) == 0 {
+		return result, nil
+	}
+	for _, id := range datasetIDs {
+		result[id] = DatasetParsingSummary{Status: "empty"}
+	}
+	var rows []struct {
+		KbID            string
+		IngestionStatus string
+		Count           int64
+	}
+	status := buildDocumentListIngestionStatusExpression(db)
+	err := db.WithContext(ctx).Table("document").Joins(latestIngestionTaskJoin).
+		Select("document.kb_id, "+status+" AS ingestion_status, COUNT(*) AS count").
+		Where("document.kb_id IN ? AND document.status = ?", datasetIDs, "1").
+		Group("document.kb_id, " + status).Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	for _, row := range rows {
+		summary := result[row.KbID]
+		summary.Total += row.Count
+		switch row.IngestionStatus {
+		case common.COMPLETED:
+			summary.Completed += row.Count
+		case common.CREATED, common.SCHEDULED, common.RUNNING, common.STOPPING:
+			summary.Running += row.Count
+		case common.FAILED:
+			summary.Failed += row.Count
+		default:
+			summary.Pending += row.Count
+		}
+		result[row.KbID] = summary
+	}
+	for id, summary := range result {
+		switch {
+		case summary.Running > 0:
+			summary.Status = "running"
+		case summary.Failed > 0:
+			summary.Status = "failed"
+		case summary.Pending > 0:
+			summary.Status = "pending"
+		case summary.Total > 0:
+			summary.Status = "ready"
+		default:
+			summary.Status = "empty"
+		}
+		result[id] = summary
+	}
+	return result, nil
+}

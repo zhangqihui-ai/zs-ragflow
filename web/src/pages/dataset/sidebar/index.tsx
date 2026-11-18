@@ -32,27 +32,27 @@ export function SideBar({ dataset: data }: PropType) {
   const items = useMemo(() => {
     const list = [
       {
-        icon: <LucideFolderOpen className="size-[1em]" />,
+        icon: <LucideFolderOpen className="size-4" aria-hidden="true" />,
         label: t(`knowledgeDetails.subbarFiles`),
         key: Routes.Files,
       },
       {
-        icon: <LucideTextSearch className="size-[1em]" />,
+        icon: <LucideTextSearch className="size-4" aria-hidden="true" />,
         label: t(`knowledgeDetails.testing`),
         key: Routes.DatasetTesting,
       },
       {
-        icon: <LucideLogs className="size-[1em]" />,
+        icon: <LucideLogs className="size-4" aria-hidden="true" />,
         label: t(`knowledgeDetails.overview`),
         key: Routes.DataSetOverview,
       },
       {
-        icon: <LucideSettings className="size-[1em]" />,
+        icon: <LucideSettings className="size-4" aria-hidden="true" />,
         label: t(`knowledgeDetails.configuration`),
         key: Routes.DataSetSetting,
       },
       {
-        icon: <LucideBookText className="size-[1em]" />,
+        icon: <LucideBookText className="size-4" aria-hidden="true" />,
         label: 'Artifacts',
         key: Routes.Compilation,
       },
@@ -62,7 +62,7 @@ export function SideBar({ dataset: data }: PropType) {
   }, [t]);
 
   return (
-    <aside className="flex flex-col w-64 relative">
+    <aside className="navigation-sidebar flex flex-col w-64 relative">
       <header
         className="px-5 pb-4 grid grid-cols-[auto_1fr] grid-rows-[auto_auto] gap-x-3"
         style={{
@@ -112,9 +112,11 @@ export function SideBar({ dataset: data }: PropType) {
                   block
                   variant="ghost"
                   className={cn(
-                    'justify-start gap-2.5 px-3 relative h-10 text-base',
-                    active && 'bg-bg-card text-text-primary',
+                    'justify-start gap-2.5 px-3 relative h-10 rounded-xl text-base font-normal text-text-secondary',
+                    active &&
+                      '!bg-nav-active-bg !text-nav-active-text hover:!bg-nav-active-bg hover:!text-nav-active-text focus-visible:!bg-nav-active-bg focus-visible:!text-nav-active-text',
                   )}
+                  aria-current={active ? 'page' : undefined}
                   to={`${Routes.DatasetBase}${item.key}/${id}`}
                 >
                   {item.icon}

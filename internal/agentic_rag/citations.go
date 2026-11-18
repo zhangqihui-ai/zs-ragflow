@@ -139,6 +139,31 @@ func InsertCitationMarkers(final string, chunkIDs []string) string {
 // citedRefRE matches the `[ID:n]` handle the model writes.
 var citedRefRE = regexp.MustCompile(`\[ID:(\d+)\]`)
 
+var chunkCitationRE = regexp.MustCompile(`\[ID:([A-Za-z0-9_-]+)\]`)
+
+// NormalizeChunkCitations converts chunk IDs the model saw into the numeric
+// handles assigned by this turn's evidence registry.
+func NormalizeChunkCitations(answer string, registry *EvidenceRegistry) string {
+	ids := registry.IDs()
+	if len(ids) == 0 {
+		return answer
+	}
+	handles := make(map[string]int, len(ids))
+	for i, id := range ids {
+		handles[id] = i
+	}
+	return chunkCitationRE.ReplaceAllStringFunc(answer, func(marker string) string {
+		id := marker[len("[ID:") : len(marker)-1]
+		if n, err := strconv.Atoi(id); err == nil && n >= 0 && n < len(ids) && citedRefRE.MatchString(marker) {
+			return marker
+		}
+		if handle, ok := handles[id]; ok {
+			return fmt.Sprintf("[ID:%d]", handle)
+		}
+		return marker
+	})
+}
+
 // commaCitationRE matches a handle group the model compressed into ONE marker
 // ("[ID:47, ID:115]") instead of writing one marker per passage.
 var commaCitationRE = regexp.MustCompile(`\[\s*ID\s*:\s*[0-9]+(?:\s*,\s*ID\s*:\s*[0-9]+)+\s*\]`)

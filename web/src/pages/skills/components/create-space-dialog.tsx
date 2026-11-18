@@ -81,7 +81,11 @@ export const CreateSpaceDialog: React.FC<CreateSpaceDialogProps> = ({
           >
             {t('common.cancel')}
           </Button>
-          <Button onClick={onCreate} disabled={!spaceInput.trim()}>
+          <Button
+            data-creation-action
+            onClick={onCreate}
+            disabled={!spaceInput.trim()}
+          >
             {t('common.create')}
           </Button>
         </DialogFooter>

@@ -177,6 +177,7 @@ export function CreateAgentForm({
           </Button>
         ) : (
           <ButtonLoading
+            data-creation-action
             data-testid="agent-save"
             type="submit"
             form={TagRenameId}

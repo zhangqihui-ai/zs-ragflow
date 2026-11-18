@@ -286,6 +286,7 @@ type KnowledgebaseListItem struct {
 	TenantEmbdID           *string `json:"tenant_embd_id,omitempty"`
 	Nickname               string  `json:"nickname"`
 	TenantAvatar           *string `json:"tenant_avatar,omitempty"`
+	CreateTime             *int64  `json:"create_time,omitempty"`
 	UpdateTime             *int64  `json:"update_time,omitempty"`
 	PipelineID             *string `json:"pipeline_id,omitempty"`
 	PipelineVersionID      *string `json:"pipeline_version_id,omitempty"`

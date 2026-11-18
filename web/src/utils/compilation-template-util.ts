@@ -19,6 +19,12 @@ import { TFunction } from 'i18next';
 import { capitalize, lowerCase } from 'lodash';
 
 export function formatKindLabel(t: TFunction, kind: string): string {
+  const translated = t(`knowledgeCompilation.templateKindLabels.${kind}`, {
+    defaultValue: '',
+  });
+  if (translated) {
+    return translated;
+  }
   if (kind === CompilationTemplateKind.Artifacts) {
     return 'Wiki';
   }

@@ -1,22 +1,10 @@
 # Project instructions for Copilot
 
-## How to run (minimum)
-- Install:
-  - python -m venv .venv && source .venv/bin/activate
-  - pip install -r requirements.txt
-- Run:
-  - (fill) e.g. uvicorn app.main:app --reload
-- Verify:
-  - (fill) curl http://127.0.0.1:8000/health
+Read and follow the repository-root [AGENTS.md](../AGENTS.md) before any RAGFlow / ZS-RAG work. It is the authoritative project guide and persistent record of user requirements. For frontend work, also read [web/AGENTS.md](../web/AGENTS.md).
 
-## Project layout (what matters)
-- app/: API entrypoints + routers
-- services/: business logic
-- configs/: config loading (.env)
-- docs/: documents
-- tests/: pytest
+The two highest-priority repository requirements apply to every future task:
 
-## Conventions
-- Prefer small, incremental changes.
-- Add logging for new flows.
-- Add/adjust tests for behavior changes.
+1. Develop using `docker-compose-dev.yml` with source mounts and hot reload for both the Vite frontend and Go backend. Start from the repository root with `docker compose -f docker-compose-dev.yml up --build -d`; see [the development guide](../docker/dev/README.md) for preparation.
+2. Keep the UI blue and white, with consistent project fonts, backgrounds, and component styles. Use existing semantic tokens and shared components; do not replace the primary palette with another color scheme.
+
+Use the Go implementation for server work. Follow the build and test commands in `AGENTS.md` and the relevant local instructions.

@@ -26,7 +26,12 @@ export function CreateFolderDialog({
         </DialogHeader>
         <CreateFolderForm hideModal={hideModal} onOk={onOk}></CreateFolderForm>
         <DialogFooter>
-          <ButtonLoading type="submit" form={TagRenameId} loading={loading}>
+          <ButtonLoading
+            data-creation-action
+            type="submit"
+            form={TagRenameId}
+            loading={loading}
+          >
             {t('common.save')}
           </ButtonLoading>
         </DialogFooter>

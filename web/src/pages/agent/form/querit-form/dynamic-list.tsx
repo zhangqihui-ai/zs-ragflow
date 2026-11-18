@@ -65,7 +65,11 @@ export function DynamicList({
           </div>
         ))}
       </div>
-      <BlockButton type="button" onClick={() => append({ value: '' })}>
+      <BlockButton
+        data-creation-action
+        type="button"
+        onClick={() => append({ value: '' })}
+      >
         {t('common.add')}
       </BlockButton>
     </FormItem>

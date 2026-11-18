@@ -92,6 +92,8 @@ module.exports = {
           5: 'rgba(var(--accent-primary) / 0.05)', // 5%
         },
         'bg-accent': 'var(--bg-accent)',
+        'nav-active-bg': 'var(--nav-active-bg)',
+        'nav-active-text': 'var(--nav-active-text)',
         'state-success': {
           DEFAULT: 'rgb(var(--state-success) / <alpha-value>)',
           5: 'rgba(var(--state-success) / 0.05)', // 5%

@@ -258,6 +258,7 @@ function AdminWhitelist() {
               </Button>
 
               <Button
+                data-creation-action
                 variant="outline"
                 className="h-10 px-4 dark:bg-bg-input dark:border-border-button text-text-secondary"
                 onClick={() => setImportModalOpen(true)}
@@ -267,6 +268,7 @@ function AdminWhitelist() {
               </Button>
 
               <Button
+                data-creation-action
                 className="h-10 px-4"
                 onClick={() => setCreateModalOpen(true)}
               >
@@ -432,6 +434,7 @@ function AdminWhitelist() {
             </Button>
 
             <Button
+              data-creation-action
               form={createEmailForm.id}
               type="submit"
               className="px-4 h-10"
@@ -528,6 +531,7 @@ function AdminWhitelist() {
             </Button>
 
             <Button
+              data-creation-action
               form={importExcelForm.id}
               type="submit"
               className="px-4 h-10"

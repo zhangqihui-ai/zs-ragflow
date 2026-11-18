@@ -74,7 +74,7 @@ export function InstanceNameSection({
             <Trash2 className="size-4" />
           </Button>
         </ConfirmDeleteDialog>
-        <InstanceSaveButton onSave={handleSave} saving={saving} />
+        <InstanceSaveButton isCreate onSave={handleSave} saving={saving} />
       </div>
     </div>
   );

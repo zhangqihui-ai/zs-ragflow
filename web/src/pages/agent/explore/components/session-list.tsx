@@ -41,7 +41,12 @@ export function SessionList({
           <h2 className="text-base font-bold">{t('explore.sessions')}</h2>
           <span className="text-xs text-text-secondary">{total}</span>
         </div>
-        <Button variant="ghost" size="icon" onClick={addTemporarySession}>
+        <Button
+          data-creation-action
+          variant="ghost"
+          size="icon"
+          onClick={addTemporarySession}
+        >
           <Plus className="h-4 w-4" />
         </Button>
       </div>

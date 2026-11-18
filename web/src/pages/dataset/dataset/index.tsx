@@ -182,7 +182,11 @@ export default function Dataset() {
             <CancelParsingDropdown />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="default" disabled={datasetEditButtonDisabled}>
+                <Button
+                  data-creation-action
+                  size="default"
+                  disabled={datasetEditButtonDisabled}
+                >
                   <LucidePlus />
                   {t('knowledgeDetails.addFile')}
                 </Button>
@@ -233,6 +237,7 @@ export default function Dataset() {
         )}
         {createVisible && (
           <RenameDialog
+            isCreate
             hideModal={hideCreateModal}
             onOk={onCreateOk}
             loading={createLoading}

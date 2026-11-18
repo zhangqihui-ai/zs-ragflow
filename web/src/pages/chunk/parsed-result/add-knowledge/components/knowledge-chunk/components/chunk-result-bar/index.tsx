@@ -96,6 +96,7 @@ export default function ChunkResultBar({
       />
 
       <Button
+        data-creation-action
         variant="outline"
         size="icon"
         onClick={() => createChunk()}

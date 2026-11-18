@@ -290,6 +290,7 @@ const StringEditor: React.FC<TypeEditorProps> = ({
             onKeyDown={(e) => e.key === 'Enter' && handleAddEnumValue()}
           />
           <button
+            data-creation-action
             type="button"
             onClick={handleAddEnumValue}
             className="px-3 py-1 h-8 rounded-md bg-secondary text-xs font-medium hover:bg-secondary/80"

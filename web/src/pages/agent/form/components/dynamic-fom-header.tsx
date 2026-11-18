@@ -20,6 +20,7 @@ export function DynamicFormHeader({
     <div className="flex items-center justify-between">
       <FormLabel tooltip={tooltip}>{label}</FormLabel>
       <Button
+        data-creation-action
         variant={'ghost'}
         type="button"
         onClick={onClick}

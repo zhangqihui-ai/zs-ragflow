@@ -45,6 +45,7 @@ export function DynamicVariableForm({
           {t('chat.variable')}
         </FormLabel>
         <Button
+          data-creation-action
           variant="ghost"
           size="icon-sm"
           className="border-0"

@@ -49,7 +49,11 @@ export function BeginDynamicOptions() {
           </div>
         );
       })}
-      <BlockButton onClick={() => append({ value: '' })} type="button">
+      <BlockButton
+        data-creation-action
+        onClick={() => append({ value: '' })}
+        type="button"
+      >
         {t('flow.addField')}
       </BlockButton>
     </div>
